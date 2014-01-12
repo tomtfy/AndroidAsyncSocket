@@ -1,0 +1,4 @@
+AndroidAsyncSocket
+========================
+
+Unfinished development.
