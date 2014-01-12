@@ -21,7 +21,7 @@ import android.util.Log;
  * Author : isUseful ? TanJian : Unknown
  * English by google translate.
  **************************************************************************/
-public class AsyncSocketClient
+public class AsyncSocket
 {
 
 	private static final String			TAG							= "AsyncSocketClient";
@@ -69,7 +69,7 @@ public class AsyncSocketClient
 	 * @param ip
 	 * @param prot
 	 */
-	public AsyncSocketClient(String ip, int prot, AsyncSocketListener listener)
+	public AsyncSocket(String ip, int prot, AsyncSocketListener listener)
 	{
 		this(ip, prot, listener, false);
 	}
@@ -82,7 +82,7 @@ public class AsyncSocketClient
 	 * @param encode
 	 * @param debug
 	 */
-	public AsyncSocketClient(String ip, int prot, AsyncSocketListener listener, boolean debug)
+	public AsyncSocket(String ip, int prot, AsyncSocketListener listener, boolean debug)
 	{
 		_debug = debug;
 		_serverIP = ip;
@@ -140,7 +140,7 @@ public class AsyncSocketClient
 		_socketWriter.println(message);
 	}
 
-	public synchronized void closeSocket()
+	public synchronized void close()
 	{
 		if (_state != SOCKET_STATE_CONNECTING)
 		{
@@ -150,7 +150,7 @@ public class AsyncSocketClient
 		_working = false;
 	}
 
-	public synchronized void connectSocket()
+	public synchronized void connect()
 	{
 		if (_state != SOCKET_STATE_NOTCONNECTED)
 		{
