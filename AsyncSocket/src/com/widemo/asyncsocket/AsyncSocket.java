@@ -91,7 +91,7 @@ public class AsyncSocket
 		_socketHandler = new SocketConnectHandler();
 		_socketRunnable = new SocketConnectRunnable(_socketHandler);
 		_executor = Executors.newCachedThreadPool();
-		logInfo(String.format("Connect to %1$s:%2&d", _serverIP, _serverProt));
+		logInfo(String.format("Connect to %1$s:%2$d", _serverIP, _serverProt));
 	}
 
 	/**
