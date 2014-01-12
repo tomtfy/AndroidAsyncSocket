@@ -1,14 +1,10 @@
 package com.widemo.asyncsocket;
 
 /**************************************************************************
-
-AsyncSocketListener
-
-Author   :   isUseful ? TanJian : Unknown
-
-English by google translate.
-
-**************************************************************************/
+ * AsyncSocketListener
+ * Author : isUseful ? TanJian : Unknown
+ * English by google translate.
+ **************************************************************************/
 public interface AsyncSocketListener
 {
 	/**
@@ -26,5 +22,9 @@ public interface AsyncSocketListener
 	 */
 	void OnSocketInterruption();
 
+	/**
+	 * Is called when receive message.
+	 * @param msg
+	 */
 	void OnSocketReceive(String msg);
 }
