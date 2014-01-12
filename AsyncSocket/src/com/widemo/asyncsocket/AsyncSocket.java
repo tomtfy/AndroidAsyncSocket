@@ -133,11 +133,14 @@ public class AsyncSocket
 	 */
 	public void sendMessage(String message)
 	{
-		if (_state != SOCKET_STATE_CONNECTING || TextUtils.isEmpty(message))
+		if (_state != SOCKET_STATE_CONNECTED || TextUtils.isEmpty(message))
 		{
+			logWarn("CAN'T send message because socket not connected!");
 			return;
 		}
 		_socketWriter.println(message);
+		_socketWriter.flush();
+		logInfo(String.format("Send Message : %1&s", message));
 	}
 
 	public synchronized void close()
