@@ -1,11 +1,10 @@
 package com.widemo.asyncsocket;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.concurrent.Executor;
@@ -59,12 +58,12 @@ public class AsyncSocket
 	private int							_timeout					= 30 * 1000;
 	private String						_encode						= SOCKET_ENCODE_UTF8;
 	private Socket						_socket						= null;
-	private BufferedReader				_socketReader				= null;
-	private PrintWriter					_socketWriter				= null;
+	private DataInputStream				_socketReader				= null;
+	private DataOutputStream			_socketWriter				= null;
 	private Executor					_executor					= null;
 
 	/**
-	 * Instantiate AsyncSocketClient with ip and prot, log off.
+	 * Instantiate AsyncSocketClient with IP and port, log off.
 	 * 
 	 * @param ip
 	 * @param prot
@@ -75,7 +74,7 @@ public class AsyncSocket
 	}
 
 	/**
-	 * Instantiate AsyncSocketClient with ip, prot and log switch.
+	 * Instantiate AsyncSocketClient with IP, port and log switch.
 	 * 
 	 * @param ip
 	 * @param prot
@@ -131,16 +130,42 @@ public class AsyncSocket
 	 * 
 	 * @param message
 	 */
-	public void sendMessage(String message)
+	public void send(String message)
 	{
 		if (_state != SOCKET_STATE_CONNECTED || TextUtils.isEmpty(message))
 		{
 			logWarn("CAN'T send message because socket not connected!");
 			return;
 		}
-		_socketWriter.println(message);
-		_socketWriter.flush();
-		logInfo(String.format("Send Message : %1&s", message));
+		try
+		{
+			_socketWriter.writeChars(message);
+			_socketWriter.flush();
+			logInfo(String.format("Send Message : %1&s", message));
+		}
+		catch (IOException e)
+		{
+			logError(e.getMessage());
+		}
+	}
+
+	public void send(byte[] data)
+	{
+		if (_state != SOCKET_STATE_CONNECTED || data == null || data.length <= 0)
+		{
+			logWarn("CAN'T send message because socket not connected!");
+			return;
+		}
+		try
+		{
+			_socketWriter.write(data);
+			_socketWriter.flush();
+			logInfo(String.format("Send Data : %1&s", String.valueOf(data)));
+		}
+		catch (IOException e)
+		{
+			logError(e.getMessage());
+		}
 	}
 
 	public synchronized void close()
@@ -228,11 +253,7 @@ public class AsyncSocket
 
 	private class SocketConnectRunnable implements Runnable
 	{
-		private InputStreamReader	_isr;
-		private OutputStreamWriter	_osw;
-		private BufferedWriter		_bw;
-
-		private final Handler		_handler;
+		private final Handler	_handler;
 
 		public SocketConnectRunnable(Handler handler)
 		{
@@ -255,28 +276,6 @@ public class AsyncSocket
 			_socketWriter = null;
 			try
 			{
-				if (_bw != null)
-				{
-					_bw.close();
-				}
-			}
-			catch (Exception e)
-			{
-			}
-			_bw = null;
-			try
-			{
-				if (_osw != null)
-				{
-					_osw.close();
-				}
-			}
-			catch (Exception e)
-			{
-			}
-			_osw = null;
-			try
-			{
 				if (_socketReader != null)
 				{
 					_socketReader.close();
@@ -286,17 +285,6 @@ public class AsyncSocket
 			{
 			}
 			_socketReader = null;
-			try
-			{
-				if (_isr != null)
-				{
-					_isr.close();
-				}
-			}
-			catch (Exception e)
-			{
-			}
-			_isr = null;
 			try
 			{
 				if (_socket != null)
@@ -329,12 +317,11 @@ public class AsyncSocket
 				InetSocketAddress isa = new InetSocketAddress(_serverIP, _serverProt);
 				_socket.connect(isa, _timeout);
 
-				_isr = new InputStreamReader(_socket.getInputStream(), _encode);
-				_socketReader = new BufferedReader(_isr);
+				InputStream is = _socket.getInputStream();
+				_socketReader = new DataInputStream(is);
 
-				_osw = new OutputStreamWriter(_socket.getOutputStream(), _encode);
-				_bw = new BufferedWriter(_osw);
-				_socketWriter = new PrintWriter(_bw, true);
+				OutputStream os = _socket.getOutputStream();
+				_socketWriter = new DataOutputStream(os);
 			}
 			catch (Exception e)
 			{

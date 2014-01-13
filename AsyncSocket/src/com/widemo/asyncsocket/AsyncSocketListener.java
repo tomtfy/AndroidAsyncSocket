@@ -24,6 +24,7 @@ public interface AsyncSocketListener
 
 	/**
 	 * Is called when receive message.
+	 * 
 	 * @param msg
 	 */
 	void OnSocketReceive(String msg);
