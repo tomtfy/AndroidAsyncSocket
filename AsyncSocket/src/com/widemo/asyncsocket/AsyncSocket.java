@@ -14,6 +14,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import com.widemo.asyncsocket.data.SocketState;
+
 /**************************************************************************
  * AsyncSocketClient
  * Author : isUseful ? TanJian : Unknown
@@ -22,29 +24,14 @@ import android.util.Log;
 public class AsyncSocket
 {
 
-	private static final String			TAG							= "AsyncSocketClient";
+	private static final String	TAG					= "AsyncSocketClient";
 
-	private static final int			RECEIVED_BYTES_SIZE			= 1024;							// Receive byte array length
+	private static final int	RECEIVED_BYTES_SIZE	= 1024;				// Receive byte array length
 
-	private static final int			SOCKET_WHAT_CONNECTED		= 0;
-	private static final int			SOCKET_WHAT_FAILED			= SOCKET_WHAT_CONNECTED + 1;
-	private static final int			SOCKET_WHAT_INTERRUPTION	= SOCKET_WHAT_FAILED + 1;
-	private static final int			SOCKET_WHAT_RECEIVE			= SOCKET_WHAT_INTERRUPTION + 1;
-
-	/**
-	 * Socket Not Connected
-	 */
-	public static final int				SOCKET_STATE_NOTCONNECTED	= 0;
-
-	/**
-	 * Socket Connecting
-	 */
-	public static final int				SOCKET_STATE_CONNECTING		= SOCKET_STATE_NOTCONNECTED + 1;
-
-	/**
-	 * Socket Connected
-	 */
-	public static final int				SOCKET_STATE_CONNECTED		= SOCKET_STATE_CONNECTING + 1;
+	private enum SocketWhat
+	{
+		CONNECTED, FAILED, INTERRUPTION, RECEIVE
+	}
 
 	private final boolean				_debug;
 	private final String				_serverIP;
@@ -53,13 +40,13 @@ public class AsyncSocket
 	private final SocketConnectHandler	_socketHandler;
 	private final AsyncSocketListener	_socketListener;
 
-	private boolean						_working					= false;
-	private int							_state						= SOCKET_STATE_NOTCONNECTED;
-	private int							_timeout					= 30 * 1000;
-	private Socket						_socket						= null;
-	private DataInputStream				_socketReader				= null;
-	private DataOutputStream			_socketWriter				= null;
-	private Executor					_executor					= null;
+	private boolean						_working		= false;
+	private SocketState					_state			= SocketState.NOTCONNECTED;
+	private int							_timeout		= 30 * 1000;
+	private Socket						_socket			= null;
+	private DataInputStream				_socketReader	= null;
+	private DataOutputStream			_socketWriter	= null;
+	private Executor					_executor		= null;
 
 	/**
 	 * Instantiate AsyncSocketClient with IP and port, log off.
@@ -108,7 +95,7 @@ public class AsyncSocket
 	 * 
 	 * @return
 	 */
-	public int getState()
+	public SocketState getState()
 	{
 		return _state;
 	}
@@ -120,7 +107,7 @@ public class AsyncSocket
 	 */
 	public void send(byte[] data)
 	{
-		if (_state != SOCKET_STATE_CONNECTED || data == null || data.length <= 0)
+		if (_state != SocketState.CONNECTED || data == null || data.length <= 0)
 		{
 			logWarn("CAN'T send message because socket not connected!");
 			return;
@@ -139,21 +126,21 @@ public class AsyncSocket
 
 	public synchronized void close()
 	{
-		if (_state != SOCKET_STATE_CONNECTING)
+		if (_state != SocketState.CONNECTING)
 		{
 			return;
 		}
-		_state = SOCKET_STATE_NOTCONNECTED;
+		_state = SocketState.NOTCONNECTED;
 		_working = false;
 	}
 
 	public synchronized void connect()
 	{
-		if (_state != SOCKET_STATE_NOTCONNECTED)
+		if (_state != SocketState.NOTCONNECTED)
 		{
 			return;
 		}
-		_state = SOCKET_STATE_CONNECTING;
+		_state = SocketState.CONNECTING;
 		_executor.execute(_socketRunnable);
 	}
 
@@ -186,31 +173,32 @@ public class AsyncSocket
 		@Override
 		public void handleMessage(Message msg)
 		{
-			int what = msg.what;
+
+			SocketWhat what = SocketWhat.values()[msg.what];
 			switch (what)
 			{
-				case SOCKET_WHAT_CONNECTED:
-					_state = SOCKET_STATE_CONNECTED;
+				case CONNECTED:
+					_state = SocketState.CONNECTED;
 					if (_socketListener != null)
 					{
 						_socketListener.OnSocketConnected();
 					}
 					break;
-				case SOCKET_WHAT_FAILED:
-					_state = SOCKET_STATE_NOTCONNECTED;
+				case FAILED:
+					_state = SocketState.NOTCONNECTED;
 					if (_socketListener != null)
 					{
 						_socketListener.OnSocketConnectionFailed();
 					}
 					break;
-				case SOCKET_WHAT_INTERRUPTION:
-					_state = SOCKET_STATE_NOTCONNECTED;
+				case INTERRUPTION:
+					_state = SocketState.NOTCONNECTED;
 					if (_socketListener != null)
 					{
 						_socketListener.OnSocketInterruption();
 					}
 					break;
-				case SOCKET_WHAT_RECEIVE:
+				case RECEIVE:
 					byte[] bytesReceived = (byte[]) msg.obj;
 					int bytes = msg.arg1;
 					if (_socketListener != null)
@@ -268,15 +256,15 @@ public class AsyncSocket
 			_socket = null;
 		}
 
-		private void sendMessage(int what, int arg1, int arg2, Object obj)
+		private void sendMessage(SocketWhat what, int arg1, int arg2, Object obj)
 		{
-			Message msg = _handler.obtainMessage(what, arg1, arg2, obj);
+			Message msg = _handler.obtainMessage(what.ordinal(), arg1, arg2, obj);
 			_handler.sendMessage(msg);
 		}
 
-		private void sendMessage(int what)
+		private void sendMessage(SocketWhat what)
 		{
-			_handler.sendEmptyMessage(what);
+			_handler.sendEmptyMessage(what.ordinal());
 		}
 
 		@Override
@@ -302,13 +290,13 @@ public class AsyncSocket
 			{
 				logError(e.getMessage());
 				clean();
-				sendMessage(SOCKET_WHAT_FAILED);
+				sendMessage(SocketWhat.FAILED);
 				return;
 			}
 			_working = true;
 			byte[] bytesReceived = new byte[RECEIVED_BYTES_SIZE];
 			int bytes = 0;
-			sendMessage(SOCKET_WHAT_CONNECTED);
+			sendMessage(SocketWhat.CONNECTED);
 			while (_working)
 			{
 				try
@@ -317,14 +305,14 @@ public class AsyncSocket
 					if (bytes > 0)
 					{
 						logInfo(String.format("Receive Message, Data size = %1$d", bytes));
-						sendMessage(SOCKET_WHAT_RECEIVE, bytes, 0, bytesReceived);
+						sendMessage(SocketWhat.RECEIVE, bytes, 0, bytesReceived);
 					}
 				}
 				catch (IOException e)
 				{
 					logError(e.getMessage());
 					clean();
-					sendMessage(SOCKET_WHAT_INTERRUPTION);
+					sendMessage(SocketWhat.INTERRUPTION);
 					return;
 				}
 			}
