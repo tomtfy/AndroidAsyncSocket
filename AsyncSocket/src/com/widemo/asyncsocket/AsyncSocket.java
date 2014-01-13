@@ -12,7 +12,6 @@ import java.util.concurrent.Executors;
 
 import android.os.Handler;
 import android.os.Message;
-import android.text.TextUtils;
 import android.util.Log;
 
 /**************************************************************************
@@ -25,14 +24,12 @@ public class AsyncSocket
 
 	private static final String			TAG							= "AsyncSocketClient";
 
-	private static final int			RECEIVED_BYTES_SIZE			= 1024;
+	private static final int			RECEIVED_BYTES_SIZE			= 1024;							// Receive byte array length
 
 	private static final int			SOCKET_WHAT_CONNECTED		= 0;
 	private static final int			SOCKET_WHAT_FAILED			= SOCKET_WHAT_CONNECTED + 1;
 	private static final int			SOCKET_WHAT_INTERRUPTION	= SOCKET_WHAT_FAILED + 1;
 	private static final int			SOCKET_WHAT_RECEIVE			= SOCKET_WHAT_INTERRUPTION + 1;
-
-	public static final String			SOCKET_ENCODE_UTF8			= "UTF-8";
 
 	/**
 	 * Socket Not Connected
@@ -59,7 +56,6 @@ public class AsyncSocket
 	private boolean						_working					= false;
 	private int							_state						= SOCKET_STATE_NOTCONNECTED;
 	private int							_timeout					= 30 * 1000;
-	private String						_encode						= SOCKET_ENCODE_UTF8;
 	private Socket						_socket						= null;
 	private DataInputStream				_socketReader				= null;
 	private DataOutputStream			_socketWriter				= null;
@@ -105,17 +101,6 @@ public class AsyncSocket
 	public void setTimeOut(int timeout)
 	{
 		_timeout = timeout;
-	}
-
-	/**
-	 * Set socket stream character encoding, If socket is already connected, set
-	 * the next time you connect.
-	 * 
-	 * @param encoder
-	 */
-	public void setEncoder(String encoder)
-	{
-		_encode = encoder;
 	}
 
 	/**
