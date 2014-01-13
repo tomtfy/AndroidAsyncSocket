@@ -24,6 +24,9 @@ public class AsyncSocket
 {
 
 	private static final String			TAG							= "AsyncSocketClient";
+
+	private static final int			RECEIVED_BYTES_SIZE			= 1024;
+
 	private static final int			SOCKET_WHAT_CONNECTED		= 0;
 	private static final int			SOCKET_WHAT_FAILED			= SOCKET_WHAT_CONNECTED + 1;
 	private static final int			SOCKET_WHAT_INTERRUPTION	= SOCKET_WHAT_FAILED + 1;
@@ -126,29 +129,10 @@ public class AsyncSocket
 	}
 
 	/**
-	 * Send message to server
+	 * Send data to server
 	 * 
-	 * @param message
+	 * @param data
 	 */
-	public void send(String message)
-	{
-		if (_state != SOCKET_STATE_CONNECTED || TextUtils.isEmpty(message))
-		{
-			logWarn("CAN'T send message because socket not connected!");
-			return;
-		}
-		try
-		{
-			_socketWriter.writeChars(message);
-			_socketWriter.flush();
-			logInfo(String.format("Send Message : %1&s", message));
-		}
-		catch (IOException e)
-		{
-			logError(e.getMessage());
-		}
-	}
-
 	public void send(byte[] data)
 	{
 		if (_state != SOCKET_STATE_CONNECTED || data == null || data.length <= 0)
@@ -160,7 +144,7 @@ public class AsyncSocket
 		{
 			_socketWriter.write(data);
 			_socketWriter.flush();
-			logInfo(String.format("Send Data : %1&s", String.valueOf(data)));
+			logInfo("Send Data");
 		}
 		catch (IOException e)
 		{
@@ -242,10 +226,10 @@ public class AsyncSocket
 					}
 					break;
 				case SOCKET_WHAT_RECEIVE:
-					String receiveMsg = (String) msg.obj;
+					byte[] bytesReceived = (byte[]) msg.obj;
 					if (_socketListener != null)
 					{
-						_socketListener.OnSocketReceive(receiveMsg);
+						_socketListener.OnSocketReceive(bytesReceived);
 					}
 			}
 		}
@@ -331,16 +315,18 @@ public class AsyncSocket
 				return;
 			}
 			_working = true;
+			byte[] bytesReceived = new byte[RECEIVED_BYTES_SIZE];
+			int bytes = 0;
 			sendMessage(SOCKET_WHAT_CONNECTED, null);
 			while (_working)
 			{
 				try
 				{
-					String msg = _socketReader.readLine();
-					if (!TextUtils.isEmpty(msg))
+					bytes = _socketReader.read(bytesReceived, 0, bytesReceived.length);
+					if (bytes > 0)
 					{
-						logInfo(String.format("Receive Message : %1$s", msg));
-						sendMessage(SOCKET_WHAT_RECEIVE, msg);
+						logInfo(String.format("Receive Message, Data size = %1$d", bytes));
+						sendMessage(SOCKET_WHAT_RECEIVE, bytesReceived);
 					}
 				}
 				catch (IOException e)

@@ -23,9 +23,9 @@ public interface AsyncSocketListener
 	void OnSocketInterruption();
 
 	/**
-	 * Is called when receive message.
+	 * Is called when receive data.
 	 * 
 	 * @param msg
 	 */
-	void OnSocketReceive(String msg);
+	void OnSocketReceive(byte[] bytesReceived);
 }
