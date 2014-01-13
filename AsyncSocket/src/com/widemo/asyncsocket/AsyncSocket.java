@@ -212,9 +212,10 @@ public class AsyncSocket
 					break;
 				case SOCKET_WHAT_RECEIVE:
 					byte[] bytesReceived = (byte[]) msg.obj;
+					int bytes = msg.arg1;
 					if (_socketListener != null)
 					{
-						_socketListener.OnSocketReceive(bytesReceived);
+						_socketListener.OnSocketReceive(bytesReceived, bytes);
 					}
 			}
 		}
@@ -267,10 +268,15 @@ public class AsyncSocket
 			_socket = null;
 		}
 
-		private void sendMessage(int what, Object obj)
+		private void sendMessage(int what, int arg1, int arg2, Object obj)
 		{
-			Message msg = _handler.obtainMessage(what, obj);
+			Message msg = _handler.obtainMessage(what, arg1, arg2, obj);
 			_handler.sendMessage(msg);
+		}
+
+		private void sendMessage(int what)
+		{
+			_handler.sendEmptyMessage(what);
 		}
 
 		@Override
@@ -296,13 +302,13 @@ public class AsyncSocket
 			{
 				logError(e.getMessage());
 				clean();
-				sendMessage(SOCKET_WHAT_FAILED, null);
+				sendMessage(SOCKET_WHAT_FAILED);
 				return;
 			}
 			_working = true;
 			byte[] bytesReceived = new byte[RECEIVED_BYTES_SIZE];
 			int bytes = 0;
-			sendMessage(SOCKET_WHAT_CONNECTED, null);
+			sendMessage(SOCKET_WHAT_CONNECTED);
 			while (_working)
 			{
 				try
@@ -311,14 +317,14 @@ public class AsyncSocket
 					if (bytes > 0)
 					{
 						logInfo(String.format("Receive Message, Data size = %1$d", bytes));
-						sendMessage(SOCKET_WHAT_RECEIVE, bytesReceived);
+						sendMessage(SOCKET_WHAT_RECEIVE, bytes, 0, bytesReceived);
 					}
 				}
 				catch (IOException e)
 				{
 					logError(e.getMessage());
 					clean();
-					sendMessage(SOCKET_WHAT_INTERRUPTION, null);
+					sendMessage(SOCKET_WHAT_INTERRUPTION);
 					return;
 				}
 			}

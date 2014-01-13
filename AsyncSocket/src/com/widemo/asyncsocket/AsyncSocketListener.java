@@ -27,5 +27,5 @@ public interface AsyncSocketListener
 	 * 
 	 * @param msg
 	 */
-	void OnSocketReceive(byte[] bytesReceived);
+	void OnSocketReceive(byte[] bytesReceived, int bytes);
 }
