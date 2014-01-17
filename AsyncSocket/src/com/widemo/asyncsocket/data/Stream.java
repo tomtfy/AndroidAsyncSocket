@@ -4,23 +4,46 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+/**************************************************************************
+ * Stream
+ * Author : isUseful ? TanJian : Unknown
+ * English by google translate.
+ **************************************************************************/
 public class Stream
 {
-	volatile int	size;
-	volatile int	readpos;
-	volatile int	writepos;
-	byte[]			buffer;
+
+	public static final int	BIG_ENDIAN		= 0;	// 大字节序、高字节序
+	public static final int	LITTLE_ENDIAN	= 1;	// 小字节序、低字节序
+
+	private volatile int	size;
+	private volatile int	readpos;
+	private volatile int	writepos;
+	private byte[]			buffer;
+
+	private final int		_endian;
 
 	public Stream()
 	{
+		this(BIG_ENDIAN);
+	}
+
+	public Stream(byte[] in)
+	{
+		this(in, BIG_ENDIAN);
+	}
+
+	public Stream(int endian)
+	{
+		this._endian = endian;
 		this.buffer = new byte[128];
 		this.size = 0;
 		this.readpos = 0;
 		this.writepos = 0;
 	}
 
-	public Stream(byte[] in)
+	public Stream(byte[] in, int endian)
 	{
+		this._endian = endian;
 		this.buffer = new byte[in.length];
 		System.arraycopy(in, 0, this.buffer, 0, in.length);
 		this.size = this.buffer.length;
@@ -106,7 +129,14 @@ public class Stream
 		int tmp = 0;
 		while (tmp < aLength * 8)
 		{
-			ret |= (read() & 0xFF) << (handleTemp - tmp);
+			if (_endian == BIG_ENDIAN)
+			{
+				ret |= (read() & 0xFF) << (tmp);
+			}
+			else
+			{
+				ret |= (read() & 0xFF) << (handleTemp - tmp);
+			}
 			tmp += 8;
 		}
 		return ret;
@@ -135,7 +165,14 @@ public class Stream
 		int handleTemp = (aLength - 1) * 8;
 		while (tmp < aLength * 8)
 		{
-			this.buffer[(this.writepos++)] = (byte) (aValue >> (handleTemp - tmp) & 0xFF);
+			if (_endian == BIG_ENDIAN)
+			{
+				this.buffer[(this.writepos++)] = (byte) (aValue >> tmp & 0xFF);
+			}
+			else
+			{
+				this.buffer[(this.writepos++)] = (byte) (aValue >> (handleTemp - tmp) & 0xFF);
+			}
 			tmp += 8;
 		}
 		this.size += aLength;
