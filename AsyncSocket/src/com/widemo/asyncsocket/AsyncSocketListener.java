@@ -25,7 +25,10 @@ public interface AsyncSocketListener
 	/**
 	 * Is called when receive data.
 	 * 
-	 * @param msg
+	 * @param bytesReceived
+	 *            receive byte array.
+	 * @param bytes
+	 *            the number of bytes that have been read.
 	 */
 	void OnSocketReceive(byte[] bytesReceived, int bytes);
 }
