@@ -210,21 +210,21 @@ public class AsyncSocket
 					_state = SocketState.CONNECTED;
 					if (_socketListener != null)
 					{
-						_socketListener.OnSocketConnected();
+						_socketListener.OnSocketConnected(AsyncSocket.this);
 					}
 					break;
 				case FAILED:
 					_state = SocketState.NOTCONNECTED;
 					if (_socketListener != null)
 					{
-						_socketListener.OnSocketConnectionFailed();
+						_socketListener.OnSocketConnectionFailed(AsyncSocket.this);
 					}
 					break;
 				case INTERRUPTION:
 					_state = SocketState.NOTCONNECTED;
 					if (_socketListener != null)
 					{
-						_socketListener.OnSocketInterruption();
+						_socketListener.OnSocketInterruption(AsyncSocket.this);
 					}
 					break;
 				case RECEIVE:
@@ -232,7 +232,7 @@ public class AsyncSocket
 					int bytes = msg.arg1;
 					if (_socketListener != null)
 					{
-						_socketListener.OnSocketReceive(bytesReceived, bytes);
+						_socketListener.OnSocketReceive(AsyncSocket.this, bytesReceived, bytes);
 					}
 			}
 		}
