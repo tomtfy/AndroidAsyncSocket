@@ -17,8 +17,8 @@ import android.util.Log;
 import com.widemo.asyncsocket.data.SocketState;
 
 /**************************************************************************
- * AsyncSocketClient
- * Author : isUseful ? TanJian : Unknown
+ * AsyncSocketClient</br>
+ * Author : isUseful ? TanJian : Unknown</br>
  * English by google translate.
  **************************************************************************/
 public class AsyncSocket
@@ -40,6 +40,7 @@ public class AsyncSocket
 	private final SocketConnectHandler	_socketHandler;
 	private final AsyncSocketListener	_socketListener;
 
+	private int							_socketID;
 	private boolean						_working		= false;
 	private SocketState					_state			= SocketState.NOTCONNECTED;
 	private int							_timeout		= 30 * 1000;
@@ -49,10 +50,12 @@ public class AsyncSocket
 	private Executor					_executor		= null;
 
 	/**
+	 * 使用指定IP、端口号实例化AsyncSocket，日志开关默认关闭
 	 * Instantiate AsyncSocketClient with IP and port, log off.
 	 * 
 	 * @param ip
 	 * @param prot
+	 * @param listener
 	 */
 	public AsyncSocket(String ip, int prot, AsyncSocketListener listener)
 	{
@@ -60,15 +63,17 @@ public class AsyncSocket
 	}
 
 	/**
-	 * Instantiate AsyncSocketClient with IP, port and log switch.
+	 * 使用指定IP、端口号及日志开关，实例化AsyncSocket
+	 * Instantiate AsyncSocket with IP, port and log switch.
 	 * 
 	 * @param ip
 	 * @param prot
-	 * @param encode
+	 * @param listener
 	 * @param debug
 	 */
 	public AsyncSocket(String ip, int prot, AsyncSocketListener listener, boolean debug)
 	{
+		_socketID = 1;
 		_debug = debug;
 		_serverIP = ip;
 		_serverProt = prot;
@@ -80,10 +85,22 @@ public class AsyncSocket
 	}
 
 	/**
+	 * 设置AsyncSocket实例ID，仅用于区分对象，不作为连接参数
+	 * 
+	 * @param id
+	 */
+	public void setID(int id)
+	{
+		_socketID = id;
+	}
+
+	/**
+	 * 设置Socket连接超时时间，如果Socket已经连接，则在断开后下次连接时生效
 	 * Set socket timeout, If socket is already connected, set the next time you
 	 * connect.
 	 * 
 	 * @param timeout
+	 *            the timeout value in milliseconds or 0 for an infinite timeout.
 	 */
 	public void setTimeOut(int timeout)
 	{
@@ -91,6 +108,7 @@ public class AsyncSocket
 	}
 
 	/**
+	 * 获取当前Socket连接状态
 	 * Current socket state.
 	 * 
 	 * @return
@@ -101,6 +119,17 @@ public class AsyncSocket
 	}
 
 	/**
+	 * 获取AsyncSocket实例ID
+	 * 
+	 * @return
+	 */
+	public int getID()
+	{
+		return _socketID;
+	}
+
+	/**
+	 * 发送数据到服务器
 	 * Send data to server
 	 * 
 	 * @param data

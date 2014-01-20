@@ -1,8 +1,8 @@
 package com.widemo.asyncsocket;
 
 /**************************************************************************
- * AsyncSocketListener
- * Author : isUseful ? TanJian : Unknown
+ * AsyncSocketListener</br>
+ * Author : isUseful ? TanJian : Unknown</br>
  * English by google translate.
  **************************************************************************/
 public interface AsyncSocketListener

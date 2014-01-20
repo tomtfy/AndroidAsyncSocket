@@ -5,8 +5,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**************************************************************************
- * Stream
- * Author : isUseful ? TanJian : Unknown
+ * Stream</br>
+ * Author : isUseful ? TanJian : Unknown</br>
  * English by google translate.
  **************************************************************************/
 public class Stream

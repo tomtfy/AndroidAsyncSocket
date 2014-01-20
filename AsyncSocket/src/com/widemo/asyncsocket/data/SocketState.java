@@ -1,8 +1,8 @@
 package com.widemo.asyncsocket.data;
 
 /**************************************************************************
- * SocketState
- * Author : isUseful ? TanJian : Unknown
+ * SocketState</br>
+ * Author : isUseful ? TanJian : Unknown</br>
  * English by google translate.
  **************************************************************************/
 public enum SocketState
