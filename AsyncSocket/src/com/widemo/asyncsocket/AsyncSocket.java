@@ -12,6 +12,7 @@ import java.util.concurrent.Executors;
 
 import android.os.Handler;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.widemo.asyncsocket.data.SocketState;
@@ -24,9 +25,9 @@ import com.widemo.asyncsocket.data.SocketState;
 public class AsyncSocket
 {
 
-	private static final String	TAG					= "AsyncSocketClient";
-
-	private static final int	RECEIVED_BYTES_SIZE	= 1024;				// Receive byte array length
+	private static final String	TAG						= "AsyncSocketClient";
+	private static final String	IP_REGULAR_EXPRESSION	= "\\d+\\.\\d+\\.\\d+\\.\\d";
+	private static final int	RECEIVED_BYTES_SIZE		= 1024;						// Receive byte array length
 
 	private enum SocketWhat
 	{
@@ -34,13 +35,14 @@ public class AsyncSocket
 	}
 
 	private final boolean				_debug;
-	private final String				_serverIP;
-	private final int					_serverProt;
+
 	private final SocketConnectRunnable	_socketRunnable;
 	private final SocketConnectHandler	_socketHandler;
 	private final AsyncSocketListener	_socketListener;
 
 	private int							_socketID;
+	private String						_serverHost;
+	private int							_serverProt;
 	private boolean						_working		= false;
 	private SocketState					_state			= SocketState.NOTCONNECTED;
 	private int							_timeout		= 30 * 1000;
@@ -57,9 +59,9 @@ public class AsyncSocket
 	 * @param prot
 	 * @param listener
 	 */
-	public AsyncSocket(String ip, int prot, AsyncSocketListener listener)
+	public AsyncSocket(AsyncSocketListener listener)
 	{
-		this(ip, prot, listener, false);
+		this(listener, false);
 	}
 
 	/**
@@ -71,17 +73,41 @@ public class AsyncSocket
 	 * @param listener
 	 * @param debug
 	 */
-	public AsyncSocket(String ip, int prot, AsyncSocketListener listener, boolean debug)
+	public AsyncSocket(AsyncSocketListener listener, boolean debug)
 	{
 		_socketID = 1;
 		_debug = debug;
-		_serverIP = ip;
-		_serverProt = prot;
 		_socketListener = listener;
 		_socketHandler = new SocketConnectHandler();
 		_socketRunnable = new SocketConnectRunnable(_socketHandler);
 		_executor = Executors.newCachedThreadPool();
-		logInfo(String.format("Connect to %1$s:%2$d", _serverIP, _serverProt));
+		logInfo(String.format("Connect to %1$s:%2$d", _serverHost, _serverProt));
+	}
+
+	/**
+	 * 设置服务器IP或地址，如果Socket已经连接，则在断开后下次连接时生效
+	 * 
+	 * @param ip
+	 *            IP地址为空时触发NullPointerException
+	 */
+	public void setServerHost(String host)
+	{
+		if (TextUtils.isEmpty(host))
+		{
+			throw new NullPointerException("Host CAN NOT be null");
+		}
+		logInfo("Set server host to \"" + host + "\"");
+		_serverHost = host;
+	}
+
+	public void setServerProt(int prot)
+	{
+		if (prot < 0 || prot > 65536)
+		{
+			throw new NullPointerException("Error prot");
+		}
+		logInfo("Set server prot to \"" + prot + "\"");
+		_serverProt = prot;
 	}
 
 	/**
@@ -91,6 +117,7 @@ public class AsyncSocket
 	 */
 	public void setID(int id)
 	{
+		logInfo("Set AsyncSocket ID to \"" + id + "\"");
 		_socketID = id;
 	}
 
@@ -104,6 +131,7 @@ public class AsyncSocket
 	 */
 	public void setTimeOut(int timeout)
 	{
+		logInfo("Set timeout to " + timeout + "ms");
 		_timeout = timeout;
 	}
 
@@ -168,6 +196,10 @@ public class AsyncSocket
 		if (_state != SocketState.NOTCONNECTED)
 		{
 			return;
+		}
+		if (TextUtils.isEmpty(_serverHost) || _serverProt <= 0)
+		{
+			throw new NullPointerException("Error IP address or prot");
 		}
 		_state = SocketState.CONNECTING;
 		_executor.execute(_socketRunnable);
@@ -306,7 +338,7 @@ public class AsyncSocket
 					_socket = new Socket();
 				}
 
-				InetSocketAddress isa = new InetSocketAddress(_serverIP, _serverProt);
+				InetSocketAddress isa = new InetSocketAddress(_serverHost, _serverProt);
 				_socket.connect(isa, _timeout);
 
 				InputStream is = _socket.getInputStream();
