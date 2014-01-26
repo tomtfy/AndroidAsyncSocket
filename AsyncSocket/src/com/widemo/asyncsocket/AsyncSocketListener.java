@@ -10,17 +10,17 @@ public interface AsyncSocketListener
 	/**
 	 * Is called when the socket connected.
 	 */
-	void OnSocketConnected(AsyncSocket asyncSocket);
+	void onSocketConnected(AsyncSocket asyncSocket);
 
 	/**
 	 * Is called when the socket connection failed.
 	 */
-	void OnSocketConnectionFailed(AsyncSocket asyncSocket);
+	void onSocketConnectionFailed(AsyncSocket asyncSocket);
 
 	/**
 	 * Is called when the socket interruption.
 	 */
-	void OnSocketInterruption(AsyncSocket asyncSocket);
+	void onSocketInterruption(AsyncSocket asyncSocket);
 
 	/**
 	 * Is called when receive data.
@@ -30,5 +30,5 @@ public interface AsyncSocketListener
 	 * @param bytes
 	 *            the number of bytes that have been read.
 	 */
-	void OnSocketReceive(AsyncSocket asyncSocket, byte[] bytesReceived, int bytes);
+	void onSocketReceive(AsyncSocket asyncSocket, byte[] bytesReceived, int bytes);
 }

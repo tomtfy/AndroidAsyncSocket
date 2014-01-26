@@ -25,9 +25,8 @@ import com.widemo.asyncsocket.data.SocketState;
 public class AsyncSocket
 {
 
-	private static final String	TAG						= "AsyncSocketClient";
-	private static final String	IP_REGULAR_EXPRESSION	= "\\d+\\.\\d+\\.\\d+\\.\\d";
-	private static final int	RECEIVED_BYTES_SIZE		= 1024;						// Receive byte array length
+	private static final String	TAG					= "AsyncSocketClient";
+	private static final int	RECEIVED_BYTES_SIZE	= 1024;				// Receive byte array length
 
 	private enum SocketWhat
 	{
@@ -242,21 +241,21 @@ public class AsyncSocket
 					_state = SocketState.CONNECTED;
 					if (_socketListener != null)
 					{
-						_socketListener.OnSocketConnected(AsyncSocket.this);
+						_socketListener.onSocketConnected(AsyncSocket.this);
 					}
 					break;
 				case FAILED:
 					_state = SocketState.NOTCONNECTED;
 					if (_socketListener != null)
 					{
-						_socketListener.OnSocketConnectionFailed(AsyncSocket.this);
+						_socketListener.onSocketConnectionFailed(AsyncSocket.this);
 					}
 					break;
 				case INTERRUPTION:
 					_state = SocketState.NOTCONNECTED;
 					if (_socketListener != null)
 					{
-						_socketListener.OnSocketInterruption(AsyncSocket.this);
+						_socketListener.onSocketInterruption(AsyncSocket.this);
 					}
 					break;
 				case RECEIVE:
@@ -264,7 +263,7 @@ public class AsyncSocket
 					int bytes = msg.arg1;
 					if (_socketListener != null)
 					{
-						_socketListener.OnSocketReceive(AsyncSocket.this, bytesReceived, bytes);
+						_socketListener.onSocketReceive(AsyncSocket.this, bytesReceived, bytes);
 					}
 			}
 		}
