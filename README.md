@@ -1,4 +1,4 @@
 AndroidAsyncSocket
 ========================
 
-Unfinished development.
+Android Socket客户端简单封装
