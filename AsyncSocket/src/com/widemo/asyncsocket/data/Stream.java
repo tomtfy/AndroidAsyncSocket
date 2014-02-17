@@ -12,8 +12,8 @@ import java.io.OutputStream;
 public class Stream
 {
 
-	public static final int	BIG_ENDIAN		= 0;	// ´ó×Ö½ÚÐò¡¢¸ß×Ö½ÚÐò
-	public static final int	LITTLE_ENDIAN	= 1;	// Ð¡×Ö½ÚÐò¡¢µÍ×Ö½ÚÐò
+	public static final int	BIG_ENDIAN		= 0;	// å¤§å­—èŠ‚åºã€é«˜å­—èŠ‚åº
+	public static final int	LITTLE_ENDIAN	= 1;	// å°å­—èŠ‚åºã€ä½Žå­—èŠ‚åº
 
 	private volatile int	size;
 	private volatile int	readpos;
@@ -157,6 +157,25 @@ public class Stream
 		_writeData(aValue, 8);
 	}
 
+	public void writeChar(char aValue)
+	{
+		_writeData(aValue, 2);
+	}
+
+	public void writeString(String aValue)
+	{
+		int len = aValue.length();
+		writeInt(len);
+		if (len > 0)
+		{
+			for (int i = 0; i < len; i++)
+			{
+				char c = readChar();
+				writeChar(c);
+			}
+		}
+	}
+
 	private void _writeData(long aValue, int aLength)
 	{
 		if (this.writepos + aLength > this.buffer.length) _expand(this.writepos + aLength + 100);
@@ -176,83 +195,6 @@ public class Stream
 			tmp += 8;
 		}
 		this.size += aLength;
-	}
-
-	public void write(byte aValue)
-	{
-		if (this.writepos + 1 > this.buffer.length) _expand(this.buffer.length + 100);
-
-		this.buffer[this.writepos] = aValue;
-		this.writepos += 1;
-		this.size += 1;
-	}
-
-	public void writeObject(Object obj)
-	{
-		int i;
-		if (obj == null) return;
-		if (obj instanceof Object[])
-		{
-			Object[] tmp = (Object[]) obj;
-			writeInt(tmp.length);
-			for (i = 0; i < tmp.length; ++i)
-				writeObject(tmp[i]);
-
-			return;
-		}
-		if (obj instanceof byte[])
-		{
-			byte[] tmp = (byte[]) obj;
-			writeInt(tmp.length);
-			write(tmp);
-			return;
-		}
-		if (obj instanceof long[])
-		{
-			long[] tmp = (long[]) obj;
-			writeLong(tmp.length);
-			for (i = 0; i < tmp.length; ++i)
-				writeLong(tmp[i]);
-
-			return;
-		}
-		if (obj instanceof String)
-		{
-			String tmp = (String) obj;
-			char[] data = tmp.toCharArray();
-			writeInt(data.length);
-			for (i = 0; i < data.length; ++i)
-				writeShort((short) data[i]);
-
-			return;
-		}
-		if (obj instanceof char[])
-		{
-			char[] data = (char[]) obj;
-			writeInt(data.length);
-			for (i = 0; i < data.length; ++i)
-				writeShort((short) data[i]);
-
-			return;
-		}
-		if (obj instanceof int[])
-		{
-			int[] data = (int[]) obj;
-			writeInt(data.length);
-			for (i = 0; i < data.length; ++i)
-				writeInt(data[i]);
-
-			return;
-		}
-		if (obj instanceof short[])
-		{
-			short[] data = (short[]) obj;
-			writeInt(data.length);
-			for (i = 0; i < data.length; ++i)
-				writeShort(data[i]);
-
-			return;
-		}
 	}
 
 	public void write(byte[] aValue)
@@ -342,7 +284,7 @@ public class Stream
 		return this.writepos;
 	}
 
-	public void writeByte(int aValue) throws IOException
+	public void writeByte(byte aValue)
 	{
 		_writeData(aValue & 0xFF, 1);
 	}
