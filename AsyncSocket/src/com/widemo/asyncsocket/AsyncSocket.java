@@ -51,7 +51,7 @@ public class AsyncSocket
 	private Executor					_executor		= null;
 
 	/**
-	 * Ê¹ÓÃÖ¸¶¨IP¡¢¶Ë¿ÚºÅÊµÀı»¯AsyncSocket£¬ÈÕÖ¾¿ª¹ØÄ¬ÈÏ¹Ø±Õ
+	 * ä½¿ç”¨æŒ‡å®šIPã€ç«¯å£å·å®ä¾‹åŒ–AsyncSocketï¼Œæ—¥å¿—å¼€å…³é»˜è®¤å…³é—­
 	 * Instantiate AsyncSocketClient with IP and port, log off.
 	 * 
 	 * @param ip
@@ -64,7 +64,7 @@ public class AsyncSocket
 	}
 
 	/**
-	 * Ê¹ÓÃÖ¸¶¨IP¡¢¶Ë¿ÚºÅ¼°ÈÕÖ¾¿ª¹Ø£¬ÊµÀı»¯AsyncSocket
+	 * ä½¿ç”¨æŒ‡å®šIPã€ç«¯å£å·åŠæ—¥å¿—å¼€å…³ï¼Œå®ä¾‹åŒ–AsyncSocket
 	 * Instantiate AsyncSocket with IP, port and log switch.
 	 * 
 	 * @param ip
@@ -84,10 +84,10 @@ public class AsyncSocket
 	}
 
 	/**
-	 * ÉèÖÃ·şÎñÆ÷IP»òµØÖ·£¬Èç¹ûSocketÒÑ¾­Á¬½Ó£¬ÔòÔÚ¶Ï¿ªºóÏÂ´ÎÁ¬½ÓÊ±ÉúĞ§
+	 * è®¾ç½®æœåŠ¡å™¨IPæˆ–åœ°å€ï¼Œå¦‚æœSocketå·²ç»è¿æ¥ï¼Œåˆ™åœ¨æ–­å¼€åä¸‹æ¬¡è¿æ¥æ—¶ç”Ÿæ•ˆ
 	 * 
 	 * @param ip
-	 *            IPµØÖ·Îª¿ÕÊ±´¥·¢NullPointerException
+	 *            IPåœ°å€ä¸ºç©ºæ—¶è§¦å‘NullPointerException
 	 */
 	public void setServerHost(String host)
 	{
@@ -110,7 +110,7 @@ public class AsyncSocket
 	}
 
 	/**
-	 * ÉèÖÃAsyncSocketÊµÀıID£¬½öÓÃÓÚÇø·Ö¶ÔÏó£¬²»×÷ÎªÁ¬½Ó²ÎÊı
+	 * è®¾ç½®AsyncSocketå®ä¾‹IDï¼Œä»…ç”¨äºåŒºåˆ†å¯¹è±¡ï¼Œä¸ä½œä¸ºè¿æ¥å‚æ•°
 	 * 
 	 * @param id
 	 */
@@ -121,7 +121,7 @@ public class AsyncSocket
 	}
 
 	/**
-	 * ÉèÖÃSocketÁ¬½Ó³¬Ê±Ê±¼ä£¬Èç¹ûSocketÒÑ¾­Á¬½Ó£¬ÔòÔÚ¶Ï¿ªºóÏÂ´ÎÁ¬½ÓÊ±ÉúĞ§
+	 * è®¾ç½®Socketè¿æ¥è¶…æ—¶æ—¶é—´ï¼Œå¦‚æœSocketå·²ç»è¿æ¥ï¼Œåˆ™åœ¨æ–­å¼€åä¸‹æ¬¡è¿æ¥æ—¶ç”Ÿæ•ˆ
 	 * Set socket timeout, If socket is already connected, set the next time you
 	 * connect.
 	 * 
@@ -135,7 +135,7 @@ public class AsyncSocket
 	}
 
 	/**
-	 * »ñÈ¡µ±Ç°SocketÁ¬½Ó×´Ì¬
+	 * è·å–å½“å‰Socketè¿æ¥çŠ¶æ€
 	 * Current socket state.
 	 * 
 	 * @return
@@ -146,7 +146,7 @@ public class AsyncSocket
 	}
 
 	/**
-	 * »ñÈ¡AsyncSocketÊµÀıID
+	 * è·å–AsyncSocketå®ä¾‹ID
 	 * 
 	 * @return
 	 */
@@ -156,7 +156,7 @@ public class AsyncSocket
 	}
 
 	/**
-	 * ·¢ËÍÊı¾İµ½·şÎñÆ÷
+	 * å‘é€æ•°æ®åˆ°æœåŠ¡å™¨
 	 * Send data to server
 	 * 
 	 * @param data
