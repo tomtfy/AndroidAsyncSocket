@@ -1,15 +1,13 @@
 package com.widemo.asyncsocket.data;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 
 /**************************************************************************
  * Stream</br> Author : isUseful ? TanJian : Unknown</br> English by google
  * translate.
  **************************************************************************/
 public class Stream {
-
+	public static final String CHATSET_UTF8 = "UTF-8";
 	public static final int BIG_ENDIAN = 0; // 大字节序、高字节序
 	public static final int LITTLE_ENDIAN = 1; // 小字节序、低字节序
 
@@ -21,11 +19,11 @@ public class Stream {
 	private final int _endian;
 
 	public Stream() {
-		this(BIG_ENDIAN);
+		this(LITTLE_ENDIAN);
 	}
 
 	public Stream(byte[] in) {
-		this(in, BIG_ENDIAN);
+		this(in, LITTLE_ENDIAN);
 	}
 
 	public Stream(int endian) {
@@ -67,12 +65,15 @@ public class Stream {
 		int len = readInt();
 
 		if (len > 0) {
+			byte[] stringData = new byte[len];
+			readBytes(stringData);
 
-			char[] chars = new char[len];
-			for (int i = 0; i < len; i++) {
-				chars[i] = readChar();
+			String result;
+			try {
+				result = new String(stringData, CHATSET_UTF8);
+			} catch (UnsupportedEncodingException e) {
+				result = null;
 			}
-			String result = new String(chars);
 			return result;
 		} else if (len == 0) {
 			return new String();
@@ -139,12 +140,12 @@ public class Stream {
 
 	public void writeString(String aValue) {
 		int len = aValue.length();
-		writeInt(len);
-		if (len > 0) {
-			for (int i = 0; i < len; i++) {
-				char c = aValue.charAt(i);
-				writeChar(c);
-			}
+		try {
+			byte[] stringData = aValue.getBytes(CHATSET_UTF8);
+			writeInt(len);
+			writeBytes(stringData);
+		} catch (UnsupportedEncodingException e) {
+			writeInt(0);
 		}
 	}
 
@@ -248,15 +249,6 @@ public class Stream {
 		_writeData(aValue & 0xFF, 1);
 	}
 
-	public static void writeByte(int data, OutputStream out) throws IOException {
-		out.write(data & 0xFF);
-	}
-
-	public static void writeBytes(byte[] data, OutputStream out)
-			throws IOException {
-		out.write(data);
-	}
-
 	public void writeBytes(byte[] data) {
 		if (data == null)
 			return;
@@ -307,103 +299,5 @@ public class Stream {
 			System.arraycopy(data, dataOffset, this.buffer, from, dataLength);
 		}
 		this.size += sizeoffset;
-	}
-
-	public static void writeInt(int data, OutputStream out) throws IOException {
-		writeByte(data & 0xFF, out);
-		writeByte(data >> 8 & 0xFF, out);
-		writeByte(data >> 16 & 0xFF, out);
-		writeByte(data >> 24 & 0xFF, out);
-	}
-
-	public static void writeShort(int data, OutputStream out)
-			throws IOException {
-		writeByte(data & 0xFF, out);
-		writeByte(data >> 8 & 0xFF, out);
-	}
-
-	public static byte readByte(InputStream in) throws IOException {
-		return (byte) (in.read() & 0xFF);
-	}
-
-	public static void readBytes(byte[] data, InputStream in)
-			throws IOException {
-		int readed = 0;
-		int pos = 0;
-		if (data.length == 0)
-			return;
-		do {
-			pos += readed;
-			if (pos == data.length)
-				return;
-		} while ((readed = in.read(data, pos, data.length - pos)) != -1);
-	}
-
-	public static int readInt(InputStream in) throws IOException {
-		int b0 = readByte(in);
-		int b1 = readByte(in);
-		int b2 = readByte(in);
-		int b3 = readByte(in);
-		return ((b3 & 0xFF) << 24 | (b2 & 0xFF) << 16 | (b1 & 0xFF) << 8 | b0 & 0xFF);
-	}
-
-	public static short readShort(InputStream in) throws IOException {
-		int b0 = readByte(in);
-		int b1 = readByte(in);
-		return (short) ((b1 & 0xFF) << 8 | b0 & 0xFF);
-	}
-
-	public static void writeObject(Object obj, OutputStream out)
-			throws IOException {
-		int i;
-		if (obj == null)
-			return;
-		if (obj instanceof Object[]) {
-			Object[] tmp = (Object[]) obj;
-			writeInt(tmp.length, out);
-			for (i = 0; i < tmp.length; ++i)
-				writeObject(tmp[i], out);
-
-			return;
-		}
-		if (obj instanceof byte[]) {
-			byte[] tmp = (byte[]) obj;
-			writeInt(tmp.length, out);
-			writeBytes(tmp, out);
-			return;
-		}
-		if (obj instanceof String) {
-			String tmp = (String) obj;
-			char[] data = tmp.toCharArray();
-			writeInt(data.length, out);
-			for (i = 0; i < data.length; ++i)
-				writeShort((short) data[i], out);
-
-			return;
-		}
-		if (obj instanceof char[]) {
-			char[] data = (char[]) obj;
-			writeInt(data.length, out);
-			for (i = 0; i < data.length; ++i)
-				writeShort((short) data[i], out);
-
-			return;
-		}
-		if (obj instanceof int[]) {
-			int[] data = (int[]) obj;
-			writeInt(data.length, out);
-			for (i = 0; i < data.length; ++i)
-				writeInt(data[i], out);
-
-			return;
-		}
-		if (obj instanceof short[]) {
-			short[] data = (short[]) obj;
-			writeInt(data.length, out);
-			for (i = 0; i < data.length; ++i)
-				writeShort(data[i], out);
-
-			return;
-		}
 	}
 }
