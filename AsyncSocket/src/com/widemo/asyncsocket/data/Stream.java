@@ -5,35 +5,30 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**************************************************************************
- * Stream</br>
- * Author : isUseful ? TanJian : Unknown</br>
- * English by google translate.
+ * Stream</br> Author : isUseful ? TanJian : Unknown</br> English by google
+ * translate.
  **************************************************************************/
-public class Stream
-{
+public class Stream {
 
-	public static final int	BIG_ENDIAN		= 0;	// 大字节序、高字节序
-	public static final int	LITTLE_ENDIAN	= 1;	// 小字节序、低字节序
+	public static final int BIG_ENDIAN = 0; // 大字节序、高字节序
+	public static final int LITTLE_ENDIAN = 1; // 小字节序、低字节序
 
-	private volatile int	size;
-	private volatile int	readpos;
-	private volatile int	writepos;
-	private byte[]			buffer;
+	private volatile int size;
+	private volatile int readpos;
+	private volatile int writepos;
+	private byte[] buffer;
 
-	private final int		_endian;
+	private final int _endian;
 
-	public Stream()
-	{
+	public Stream() {
 		this(BIG_ENDIAN);
 	}
 
-	public Stream(byte[] in)
-	{
+	public Stream(byte[] in) {
 		this(in, BIG_ENDIAN);
 	}
 
-	public Stream(int endian)
-	{
+	public Stream(int endian) {
 		this._endian = endian;
 		this.buffer = new byte[128];
 		this.size = 0;
@@ -41,8 +36,7 @@ public class Stream
 		this.writepos = 0;
 	}
 
-	public Stream(byte[] in, int endian)
-	{
+	public Stream(byte[] in, int endian) {
 		this._endian = endian;
 		this.buffer = new byte[in.length];
 		System.arraycopy(in, 0, this.buffer, 0, in.length);
@@ -51,90 +45,75 @@ public class Stream
 		this.writepos = 0;
 	}
 
-	public void resetRead()
-	{
+	public void resetRead() {
 		this.readpos = 0;
 	}
 
-	public void resetWrite()
-	{
+	public void resetWrite() {
 		this.writepos = 0;
 	}
 
-	public int read()
-	{
-		if (this.readpos >= this.size) return -1;
+	public int read() {
+		if (this.readpos >= this.size)
+			return -1;
 
-		if (this.readpos < this.size) return this.buffer[(this.readpos++)];
+		if (this.readpos < this.size)
+			return this.buffer[(this.readpos++)];
 
 		return -1;
 	}
 
-	public String readString()
-	{
+	public String readString() {
 		int len = readInt();
 
-		if (len > 0)
-		{
+		if (len > 0) {
 
 			char[] chars = new char[len];
-			for (int i = 0; i < len; i++)
-			{
+			for (int i = 0; i < len; i++) {
 				chars[i] = readChar();
 			}
 			String result = new String(chars);
 			return result;
-		}
-		else if (len == 0)
-		{
+		} else if (len == 0) {
 			return new String();
-		}
-		else
-		{
+		} else {
 			return null;
 		}
 	}
 
-	public int readInt()
-	{
+	public int readInt() {
 		int result = (int) _readData(4);
 		return result;
 	}
 
-	public char readChar()
-	{
+	public char readChar() {
 		return (char) (int) _readData(2);
 	}
 
-	public short readShort()
-	{
+	public short readShort() {
 		short result = (short) (int) _readData(2);
 		return result;
 	}
 
-	public long readLong()
-	{
+	public long readLong() {
 		long result = ((int) _readData(4) & 0xFFFFFFFFL) + (_readData(4) << 32);
 		return result;
 	}
 
-	private long _readData(int aLength)
-	{
+	private long _readData(int aLength) {
 		int av = available();
-		if (aLength > av) return -1L;
+		if (aLength > av)
+			return -1L;
 
-		if (aLength > 8) return -1L;
+		if (aLength > 8)
+			return -1L;
 		long ret = 3505670057818587136L;
 		int handleTemp = (aLength - 1) * 8;
 		int tmp = 0;
-		while (tmp < aLength * 8)
-		{
-			if (_endian == BIG_ENDIAN)
-			{
+		while (tmp < aLength * 8) {
+			if (_endian == BIG_ENDIAN) {
 				ret |= (read() & 0xFF) << (tmp);
-			}
-			else
-			{
+			} else {
 				ret |= (read() & 0xFF) << (handleTemp - tmp);
 			}
 			tmp += 8;
@@ -142,54 +121,43 @@ public class Stream
 		return ret;
 	}
 
-	public void writeInt(int aValue)
-	{
+	public void writeInt(int aValue) {
 		_writeData(aValue, 4);
 	}
 
-	public void writeShort(short aValue)
-	{
+	public void writeShort(short aValue) {
 		_writeData(aValue, 2);
 	}
 
-	public void writeLong(long aValue)
-	{
+	public void writeLong(long aValue) {
 		_writeData(aValue, 8);
 	}
 
-	public void writeChar(char aValue)
-	{
+	public void writeChar(char aValue) {
 		_writeData(aValue, 2);
 	}
 
-	public void writeString(String aValue)
-	{
+	public void writeString(String aValue) {
 		int len = aValue.length();
 		writeInt(len);
-		if (len > 0)
-		{
-			for (int i = 0; i < len; i++)
-			{
-				char c = readChar();
+		if (len > 0) {
+			for (int i = 0; i < len; i++) {
+				char c = aValue.charAt(i);
 				writeChar(c);
 			}
 		}
 	}
 
-	private void _writeData(long aValue, int aLength)
-	{
-		if (this.writepos + aLength > this.buffer.length) _expand(this.writepos + aLength + 100);
+	private void _writeData(long aValue, int aLength) {
+		if (this.writepos + aLength > this.buffer.length)
+			_expand(this.writepos + aLength + 100);
 
 		int tmp = 0;
 		int handleTemp = (aLength - 1) * 8;
-		while (tmp < aLength * 8)
-		{
-			if (_endian == BIG_ENDIAN)
-			{
+		while (tmp < aLength * 8) {
+			if (_endian == BIG_ENDIAN) {
 				this.buffer[(this.writepos++)] = (byte) (aValue >> tmp & 0xFF);
-			}
-			else
-			{
+			} else {
 				this.buffer[(this.writepos++)] = (byte) (aValue >> (handleTemp - tmp) & 0xFF);
 			}
 			tmp += 8;
@@ -197,65 +165,61 @@ public class Stream
 		this.size += aLength;
 	}
 
-	public void write(byte[] aValue)
-	{
-		if (aValue == null) return;
+	public void write(byte[] aValue) {
+		if (aValue == null)
+			return;
 		write(aValue, 0, aValue.length);
 	}
 
-	public void write(byte[] aValue, int aFrom, int aLength)
-	{
-		if (aValue == null) return;
-		if (aLength + aFrom > aValue.length) aLength = aValue.length - aFrom;
+	public void write(byte[] aValue, int aFrom, int aLength) {
+		if (aValue == null)
+			return;
+		if (aLength + aFrom > aValue.length)
+			aLength = aValue.length - aFrom;
 
-		if (this.writepos + aLength > this.buffer.length) _expand(this.writepos + aLength + 100);
+		if (this.writepos + aLength > this.buffer.length)
+			_expand(this.writepos + aLength + 100);
 
 		int tmp = 0;
-		while (tmp < aLength)
-		{
+		while (tmp < aLength) {
 			this.buffer[(this.writepos++)] = aValue[(aFrom + tmp)];
 			++tmp;
 		}
 		this.size += aLength;
 	}
 
-	private void _expand(int aSize)
-	{
+	private void _expand(int aSize) {
 		byte[] newdata = new byte[aSize];
-		if (this.buffer != null) System.arraycopy(this.buffer, 0, newdata, 0, this.buffer.length);
+		if (this.buffer != null)
+			System.arraycopy(this.buffer, 0, newdata, 0, this.buffer.length);
 		this.buffer = null;
 		this.buffer = newdata;
 	}
 
-	public byte[] getBytesM()
-	{
+	public byte[] getBytesM() {
 		byte[] data = new byte[this.size];
 		System.arraycopy(this.buffer, 0, data, 0, this.size);
 		return data;
 	}
 
-	public byte readByte()
-	{
+	public byte readByte() {
 		byte result = (byte) _readData(1);
 		return result;
 	}
 
-	public int readBytes(byte[] data)
-	{
+	public int readBytes(byte[] data) {
 		return readBytes(data, 0, data.length);
 	}
 
-	public int readBytes(byte[] data, int offset, int length)
-	{
-		if (data != null)
-		{
-			if (this.readpos >= this.buffer.length)
-			{
+	public int readBytes(byte[] data, int offset, int length) {
+		if (data != null) {
+			if (this.readpos >= this.buffer.length) {
 				return 0;
 			}
 			int l = length;
 			int av = available();
-			if (l > av) l = av;
+			if (l > av)
+				l = av;
 
 			System.arraycopy(this.buffer, this.readpos, data, offset, l);
 			this.readpos += l;
@@ -264,52 +228,45 @@ public class Stream
 		return 0;
 	}
 
-	public int size()
-	{
+	public int size() {
 		return this.size;
 	}
 
-	public int available()
-	{
+	public int available() {
 		return (this.size - this.readpos);
 	}
 
-	public int getReadPos()
-	{
+	public int getReadPos() {
 		return this.readpos;
 	}
 
-	public int getWritePos()
-	{
+	public int getWritePos() {
 		return this.writepos;
 	}
 
-	public void writeByte(byte aValue)
-	{
+	public void writeByte(byte aValue) {
 		_writeData(aValue & 0xFF, 1);
 	}
 
-	public static void writeByte(int data, OutputStream out) throws IOException
-	{
+	public static void writeByte(int data, OutputStream out) throws IOException {
 		out.write(data & 0xFF);
 	}
 
-	public static void writeBytes(byte[] data, OutputStream out) throws IOException
-	{
+	public static void writeBytes(byte[] data, OutputStream out)
+			throws IOException {
 		out.write(data);
 	}
 
-	public void writeBytes(byte[] data)
-	{
-		if (data == null) return;
+	public void writeBytes(byte[] data) {
+		if (data == null)
+			return;
 		_expand(this.writepos + data.length + 100);
 		System.arraycopy(data, 0, this.buffer, this.writepos, data.length);
 		this.writepos += data.length;
 		this.size += data.length;
 	}
 
-	public void replaceInt(int from, int newint)
-	{
+	public void replaceInt(int from, int newint) {
 		byte[] intbyte = new byte[4];
 		intbyte[3] = (byte) (newint >> 24 & 0xFF);
 		intbyte[2] = (byte) (newint >> 16 & 0xFF);
@@ -318,75 +275,71 @@ public class Stream
 		replace(from, 4, intbyte, 0, 4);
 	}
 
-	public void replaceShort(int from, short newshort)
-	{
+	public void replaceShort(int from, short newshort) {
 		byte[] intbyte = new byte[2];
 		intbyte[1] = (byte) (newshort >> 8 & 0xFF);
 		intbyte[0] = (byte) (newshort & 0xFF);
 		replace(from, 2, intbyte, 0, 2);
 	}
 
-	public void replaceByte(int from, byte newbyte)
-	{
+	public void replaceByte(int from, byte newbyte) {
 		this.buffer[from] = newbyte;
 	}
 
-	public void replace(int from, int length, byte[] data, int dataOffset, int dataLength)
-	{
-		if (data == null) return;
-		if (dataOffset + dataLength > data.length) return;
+	public void replace(int from, int length, byte[] data, int dataOffset,
+			int dataLength) {
+		if (data == null)
+			return;
+		if (dataOffset + dataLength > data.length)
+			return;
 		int sizeoffset = dataLength - length;
-		if (sizeoffset > 0)
-		{
+		if (sizeoffset > 0) {
 			byte[] tmp = new byte[this.size + sizeoffset + 100];
 			System.arraycopy(this.buffer, 0, tmp, 0, from);
-			System.arraycopy(this.buffer, from + length, tmp, from + dataLength, this.size - from + length);
+			System.arraycopy(this.buffer, from + length, tmp,
+					from + dataLength, this.size - from + length);
 			System.arraycopy(data, dataOffset, tmp, from, dataLength);
 			this.buffer = null;
 			this.buffer = tmp;
-		}
-		else
-		{
-			System.arraycopy(this.buffer, from + length, this.buffer, from + dataLength, this.size - from + length);
+		} else {
+			System.arraycopy(this.buffer, from + length, this.buffer, from
+					+ dataLength, this.size - from + length);
 			System.arraycopy(data, dataOffset, this.buffer, from, dataLength);
 		}
 		this.size += sizeoffset;
 	}
 
-	public static void writeInt(int data, OutputStream out) throws IOException
-	{
+	public static void writeInt(int data, OutputStream out) throws IOException {
 		writeByte(data & 0xFF, out);
 		writeByte(data >> 8 & 0xFF, out);
 		writeByte(data >> 16 & 0xFF, out);
 		writeByte(data >> 24 & 0xFF, out);
 	}
 
-	public static void writeShort(int data, OutputStream out) throws IOException
-	{
+	public static void writeShort(int data, OutputStream out)
+			throws IOException {
 		writeByte(data & 0xFF, out);
 		writeByte(data >> 8 & 0xFF, out);
 	}
 
-	public static byte readByte(InputStream in) throws IOException
-	{
+	public static byte readByte(InputStream in) throws IOException {
 		return (byte) (in.read() & 0xFF);
 	}
 
-	public static void readBytes(byte[] data, InputStream in) throws IOException
-	{
+	public static void readBytes(byte[] data, InputStream in)
+			throws IOException {
 		int readed = 0;
 		int pos = 0;
-		if (data.length == 0) return;
-		do
-		{
+		if (data.length == 0)
+			return;
+		do {
 			pos += readed;
-			if (pos == data.length) return;
-		}
-		while ((readed = in.read(data, pos, data.length - pos)) != -1);
+			if (pos == data.length)
+				return;
+		} while ((readed = in.read(data, pos, data.length - pos)) != -1);
 	}
 
-	public static int readInt(InputStream in) throws IOException
-	{
+	public static int readInt(InputStream in) throws IOException {
 		int b0 = readByte(in);
 		int b1 = readByte(in);
 		int b2 = readByte(in);
@@ -394,19 +347,18 @@ public class Stream
 		return ((b3 & 0xFF) << 24 | (b2 & 0xFF) << 16 | (b1 & 0xFF) << 8 | b0 & 0xFF);
 	}
 
-	public static short readShort(InputStream in) throws IOException
-	{
+	public static short readShort(InputStream in) throws IOException {
 		int b0 = readByte(in);
 		int b1 = readByte(in);
 		return (short) ((b1 & 0xFF) << 8 | b0 & 0xFF);
 	}
 
-	public static void writeObject(Object obj, OutputStream out) throws IOException
-	{
+	public static void writeObject(Object obj, OutputStream out)
+			throws IOException {
 		int i;
-		if (obj == null) return;
-		if (obj instanceof Object[])
-		{
+		if (obj == null)
+			return;
+		if (obj instanceof Object[]) {
 			Object[] tmp = (Object[]) obj;
 			writeInt(tmp.length, out);
 			for (i = 0; i < tmp.length; ++i)
@@ -414,15 +366,13 @@ public class Stream
 
 			return;
 		}
-		if (obj instanceof byte[])
-		{
+		if (obj instanceof byte[]) {
 			byte[] tmp = (byte[]) obj;
 			writeInt(tmp.length, out);
 			writeBytes(tmp, out);
 			return;
 		}
-		if (obj instanceof String)
-		{
+		if (obj instanceof String) {
 			String tmp = (String) obj;
 			char[] data = tmp.toCharArray();
 			writeInt(data.length, out);
@@ -431,8 +381,7 @@ public class Stream
 
 			return;
 		}
-		if (obj instanceof char[])
-		{
+		if (obj instanceof char[]) {
 			char[] data = (char[]) obj;
 			writeInt(data.length, out);
 			for (i = 0; i < data.length; ++i)
@@ -440,8 +389,7 @@ public class Stream
 
 			return;
 		}
-		if (obj instanceof int[])
-		{
+		if (obj instanceof int[]) {
 			int[] data = (int[]) obj;
 			writeInt(data.length, out);
 			for (i = 0; i < data.length; ++i)
@@ -449,8 +397,7 @@ public class Stream
 
 			return;
 		}
-		if (obj instanceof short[])
-		{
+		if (obj instanceof short[]) {
 			short[] data = (short[]) obj;
 			writeInt(data.length, out);
 			for (i = 0; i < data.length; ++i)
