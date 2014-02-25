@@ -151,7 +151,7 @@ public class Stream {
 
 	private void _writeData(long aValue, int aLength) {
 		if (this.writepos + aLength > this.buffer.length)
-			_expand(this.writepos + aLength + 100);
+			_expand(this.writepos + aLength + 128);
 
 		int tmp = 0;
 		int handleTemp = (aLength - 1) * 8;
@@ -252,7 +252,9 @@ public class Stream {
 	public void writeBytes(byte[] data) {
 		if (data == null)
 			return;
-		_expand(this.writepos + data.length + 100);
+		if (this.writepos + data.length > this.buffer.length) {
+			_expand(this.writepos + data.length + 128);
+		}
 		System.arraycopy(data, 0, this.buffer, this.writepos, data.length);
 		this.writepos += data.length;
 		this.size += data.length;
