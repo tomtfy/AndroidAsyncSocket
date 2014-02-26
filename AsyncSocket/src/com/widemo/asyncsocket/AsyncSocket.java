@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import android.os.Handler;
@@ -46,7 +46,8 @@ public class AsyncSocket
 	private Socket						_socket			= null;
 	private DataInputStream				_socketReader	= null;
 	private DataOutputStream			_socketWriter	= null;
-	private Executor					_executor		= null;
+	private ExecutorService				_executor		= null;
+	private SocketConnectRunnable		_socketConnectThread;
 
 	/**
 	 * 使用指定IP、端口号实例化AsyncSocket，日志开关默认关闭
@@ -185,6 +186,8 @@ public class AsyncSocket
 		}
 		_state = SocketState.NOTCONNECTED;
 		_working = false;
+		_socketConnectThread.interrupt();
+
 	}
 
 	public synchronized void connect()
@@ -198,7 +201,8 @@ public class AsyncSocket
 			throw new NullPointerException("Error IP address or prot");
 		}
 		_state = SocketState.CONNECTING;
-		_executor.execute(new SocketConnectRunnable(_socketHandler));
+		_socketConnectThread = new SocketConnectRunnable(_socketHandler);
+		_executor.execute(_socketConnectThread);
 	}
 
 	private void logInfo(String msg)
@@ -219,7 +223,7 @@ public class AsyncSocket
 
 	private void logError(String msg)
 	{
-		if (_debug)
+		if (_debug && !TextUtils.isEmpty(msg))
 		{
 			Log.e(TAG, msg);
 		}
@@ -266,51 +270,51 @@ public class AsyncSocket
 		}
 	}
 
-	private class SocketConnectRunnable implements Runnable
+	private void clean()
+	{
+		_working = false;
+		try
+		{
+			if (_socketWriter != null)
+			{
+				_socketWriter.close();
+			}
+		}
+		catch (Exception e)
+		{
+		}
+		_socketWriter = null;
+		try
+		{
+			if (_socketReader != null)
+			{
+				_socketReader.close();
+			}
+		}
+		catch (Exception e)
+		{
+		}
+		_socketReader = null;
+		try
+		{
+			if (_socket != null)
+			{
+				_socket.close();
+			}
+		}
+		catch (Exception e)
+		{
+		}
+		_socket = null;
+	}
+
+	private class SocketConnectRunnable extends Thread
 	{
 		private final Handler	_handler;
 
 		public SocketConnectRunnable(Handler handler)
 		{
 			_handler = handler;
-		}
-
-		private void clean()
-		{
-			_working = false;
-			try
-			{
-				if (_socketWriter != null)
-				{
-					_socketWriter.close();
-				}
-			}
-			catch (Exception e)
-			{
-			}
-			_socketWriter = null;
-			try
-			{
-				if (_socketReader != null)
-				{
-					_socketReader.close();
-				}
-			}
-			catch (Exception e)
-			{
-			}
-			_socketReader = null;
-			try
-			{
-				if (_socket != null)
-				{
-					_socket.close();
-				}
-			}
-			catch (Exception e)
-			{
-			}
-			_socket = null;
 		}
 
 		private void sendMessage(SocketWhat what, int arg1, int arg2, Object obj)
@@ -354,7 +358,7 @@ public class AsyncSocket
 			byte[] bytesReceived = new byte[RECEIVED_BYTES_SIZE];
 			int bytes = 0;
 			sendMessage(SocketWhat.CONNECTED);
-			while (_working)
+			while (_working && !interrupted())
 			{
 				try
 				{
@@ -369,11 +373,11 @@ public class AsyncSocket
 				{
 					logError(e.getMessage());
 					clean();
-					sendMessage(SocketWhat.INTERRUPTION);
 					return;
 				}
 			}
 			clean();
+			sendMessage(SocketWhat.INTERRUPTION);
 		}
 	}
 }
