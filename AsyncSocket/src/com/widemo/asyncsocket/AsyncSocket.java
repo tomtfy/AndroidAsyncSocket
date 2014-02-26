@@ -34,8 +34,6 @@ public class AsyncSocket
 	}
 
 	private final boolean				_debug;
-
-	private final SocketConnectRunnable	_socketRunnable;
 	private final SocketConnectHandler	_socketHandler;
 	private final AsyncSocketListener	_socketListener;
 
@@ -78,7 +76,6 @@ public class AsyncSocket
 		_debug = debug;
 		_socketListener = listener;
 		_socketHandler = new SocketConnectHandler();
-		_socketRunnable = new SocketConnectRunnable(_socketHandler);
 		_executor = Executors.newCachedThreadPool();
 		logInfo(String.format("Connect to %1$s:%2$d", _serverHost, _serverProt));
 	}
@@ -182,7 +179,7 @@ public class AsyncSocket
 
 	public synchronized void close()
 	{
-		if (_state != SocketState.CONNECTING)
+		if (_state != SocketState.CONNECTED)
 		{
 			return;
 		}
@@ -201,7 +198,7 @@ public class AsyncSocket
 			throw new NullPointerException("Error IP address or prot");
 		}
 		_state = SocketState.CONNECTING;
-		_executor.execute(_socketRunnable);
+		_executor.execute(new SocketConnectRunnable(_socketHandler));
 	}
 
 	private void logInfo(String msg)

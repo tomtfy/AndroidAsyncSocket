@@ -1,295 +1,205 @@
 package com.widemo.asyncsocket.data;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 
 /**************************************************************************
- * Stream</br> Author : isUseful ? TanJian : Unknown</br> English by google
- * translate.
+ * Stream</br>
+ * Author : isUseful ? TanJian : Unknown</br>
+ * English by google translate.
  **************************************************************************/
-public class Stream {
-	public static final String CHARSET_UTF8 = "UTF-8";
-	public static final int BIG_ENDIAN = 0; // 大字节序、高字节序
-	public static final int LITTLE_ENDIAN = 1; // 小字节序、低字节序
+public class Stream
+{
+	public static final String	CHARSET_UTF8	= "UTF-8";
 
-	private volatile int size;
-	private volatile int readpos;
-	private volatile int writepos;
-	private byte[] buffer;
+	private ByteBuffer			buffer;
 
-	private final int _endian;
-
-	public Stream() {
-		this(LITTLE_ENDIAN);
+	public Stream()
+	{
+		this.buffer = ByteBuffer.allocate(128);
+		buffer.rewind();
 	}
 
-	public Stream(byte[] in) {
-		this(in, LITTLE_ENDIAN);
+	public Stream(byte[] in)
+	{
+		this.buffer = ByteBuffer.allocate(in.length + 128);
+		this.buffer.put(in, 0, in.length);
+		buffer.rewind();
 	}
 
-	public Stream(int endian) {
-		this._endian = endian;
-		this.buffer = new byte[128];
-		this.size = 0;
-		this.readpos = 0;
-		this.writepos = 0;
+	private void expand(int length)
+	{
+		ByteBuffer byteBuffer = ByteBuffer.allocate(length);
+		byteBuffer.put(buffer.array());
+		int position = buffer.position();
+		buffer = byteBuffer;
+		buffer.position(position);
 	}
 
-	public Stream(byte[] in, int endian) {
-		this._endian = endian;
-		this.buffer = new byte[in.length];
-		System.arraycopy(in, 0, this.buffer, 0, in.length);
-		this.size = this.buffer.length;
-		this.readpos = 0;
-		this.writepos = 0;
-	}
-
-	public void resetRead() {
-		this.readpos = 0;
-	}
-
-	public void resetWrite() {
-		this.writepos = 0;
-	}
-
-	public int read() {
-		if (this.readpos >= this.size)
-			return -1;
-
-		if (this.readpos < this.size)
-			return this.buffer[(this.readpos++)];
-
-		return -1;
-	}
-
-	public String readString() {
+	public String readString()
+	{
 		int len = readInt();
 
-		if (len > 0) {
+		if (len > 0)
+		{
 			byte[] stringData = new byte[len];
 			readBytes(stringData);
 
 			String result;
-			try {
+			try
+			{
 				result = new String(stringData, CHARSET_UTF8);
-			} catch (UnsupportedEncodingException e) {
+			}
+			catch (UnsupportedEncodingException e)
+			{
 				result = null;
 			}
 			return result;
-		} else if (len == 0) {
+		}
+		else if (len == 0)
+		{
 			return new String();
-		} else {
+		}
+		else
+		{
 			return null;
 		}
 	}
 
-	public int readInt() {
-		int result = (int) _readData(4);
-		return result;
+	public int readInt()
+	{
+		return buffer.getInt();
 	}
 
-	public char readChar() {
-		return (char) (int) _readData(2);
+	public char readChar()
+	{
+		return buffer.getChar();
 	}
 
-	public short readShort() {
-		short result = (short) (int) _readData(2);
-		return result;
+	public short readShort()
+	{
+		return buffer.getShort();
 	}
 
-	public long readLong() {
-		long result = ((int) _readData(4) & 0xFFFFFFFFL) + (_readData(4) << 32);
-		return result;
+	public long readLong()
+	{
+		return buffer.getLong();
 	}
 
-	public byte readByte() {
-		byte result = (byte) _readData(1);
-		return result;
+	public byte readByte()
+	{
+		return buffer.get();
 	}
 
-	public int readBytes(byte[] data) {
+	public int readBytes(byte[] data)
+	{
 		return readBytes(data, 0, data.length);
 	}
 
-	public int readBytes(byte[] data, int offset, int length) {
-		if (data != null) {
-			if (this.readpos >= this.buffer.length) {
-				return 0;
+	public int readBytes(byte[] data, int offset, int length)
+	{
+		if (data != null)
+		{
+			if (length > buffer.remaining())
+			{
+				length = buffer.remaining();
 			}
-			int l = length;
-			int av = available();
-			if (l > av)
-				l = av;
-
-			System.arraycopy(this.buffer, this.readpos, data, offset, l);
-			this.readpos += l;
-			return l;
+			buffer.get(data, offset, length);
+			return length;
 		}
+
 		return 0;
 	}
 
-	private long _readData(int aLength) {
-		int av = available();
-		if (aLength > av)
-			return -1L;
-
-		if (aLength > 8)
-			return -1L;
-		long ret = 3505670057818587136L;
-		int handleTemp = (aLength - 1) * 8;
-		int tmp = 0;
-		while (tmp < aLength * 8) {
-			if (_endian == BIG_ENDIAN) {
-				ret |= (read() & 0xFF) << (tmp);
-			} else {
-				ret |= (read() & 0xFF) << (handleTemp - tmp);
-			}
-			tmp += 8;
+	public void writeByte(byte aValue)
+	{
+		if (buffer.remaining() < 1)
+		{
+			expand(buffer.array().length + 1 + 128);
 		}
-		return ret;
+		buffer.put(aValue);
 	}
 
-	public void writeByte(byte aValue) {
-		_writeData(aValue & 0xFF, 1);
+	public void writeInt(int aValue)
+	{
+		if (buffer.remaining() < 4)
+		{
+			expand(buffer.array().length + 4 + 128);
+		}
+		buffer.putInt(aValue);
 	}
 
-	public void writeInt(int aValue) {
-		_writeData(aValue, 4);
+	public void writeShort(short aValue)
+	{
+		if (buffer.remaining() < 2)
+		{
+			expand(buffer.array().length + 2 + 128);
+		}
+		buffer.putShort(aValue);
 	}
 
-	public void writeShort(short aValue) {
-		_writeData(aValue, 2);
+	public void writeLong(long aValue)
+	{
+		if (buffer.remaining() < 8)
+		{
+			expand(buffer.array().length + 8 + 128);
+		}
+		buffer.putLong(aValue);
 	}
 
-	public void writeLong(long aValue) {
-		_writeData(aValue, 8);
+	public void writeChar(char aValue)
+	{
+		if (buffer.remaining() < 2)
+		{
+			expand(buffer.array().length + 2 + 128);
+		}
+		buffer.putChar(aValue);
 	}
 
-	public void writeChar(char aValue) {
-		_writeData(aValue, 2);
-	}
-
-	public void writeString(String aValue) {
+	public void writeString(String aValue)
+	{
 		writeString(aValue, CHARSET_UTF8);
 	}
 
-	public void writeString(String aValue, String charset) {
+	public void writeString(String aValue, String charset)
+	{
 		int len = aValue.length();
-		try {
+		try
+		{
 			byte[] stringData = aValue.getBytes(charset);
 			writeInt(len);
+			if (buffer.remaining() < stringData.length)
+			{
+				expand(buffer.array().length + stringData.length + 128);
+			}
 			writeBytes(stringData);
-		} catch (UnsupportedEncodingException e) {
+		}
+		catch (UnsupportedEncodingException e)
+		{
 			writeInt(0);
 		}
 	}
 
-	private void _writeData(long aValue, int aLength) {
-		if (this.writepos + aLength > this.buffer.length)
-			_expand(this.writepos + aLength + 128);
-
-		int tmp = 0;
-		int handleTemp = (aLength - 1) * 8;
-		while (tmp < aLength * 8) {
-			if (_endian == BIG_ENDIAN) {
-				this.buffer[(this.writepos++)] = (byte) (aValue >> tmp & 0xFF);
-			} else {
-				this.buffer[(this.writepos++)] = (byte) (aValue >> (handleTemp - tmp) & 0xFF);
-			}
-			tmp += 8;
-		}
-		this.size += aLength;
-	}
-
-	public void writeBytes(byte[] aValue) {
-		if (aValue == null)
-			return;
+	public void writeBytes(byte[] aValue)
+	{
+		if (aValue == null) return;
 		writeBytes(aValue, 0, aValue.length);
 	}
 
-	public void writeBytes(byte[] aValue, int aFrom, int aLength) {
-		if (aValue == null)
-			return;
-		if (aLength + aFrom > aValue.length)
-			aLength = aValue.length - aFrom;
-
-		if (this.writepos + aLength > this.buffer.length)
-			_expand(this.writepos + aLength + 100);
-
-		System.arraycopy(aValue, aFrom, this.buffer, this.writepos, aLength);
-		this.writepos += aLength;
-		this.size += aLength;
-	}
-
-	private void _expand(int aSize) {
-		byte[] newdata = new byte[aSize];
-		if (this.buffer != null)
-			System.arraycopy(this.buffer, 0, newdata, 0, this.buffer.length);
-		this.buffer = null;
-		this.buffer = newdata;
-	}
-
-	public byte[] toBytes() {
-		byte[] data = new byte[this.size];
-		System.arraycopy(this.buffer, 0, data, 0, this.size);
-		return data;
-	}
-
-	public int size() {
-		return this.size;
-	}
-
-	public int available() {
-		return (this.size - this.readpos);
-	}
-
-	public int getReadPos() {
-		return this.readpos;
-	}
-
-	public int getWritePos() {
-		return this.writepos;
-	}
-
-	public void replaceInt(int from, int newint) {
-		byte[] intbyte = new byte[4];
-		intbyte[3] = (byte) (newint >> 24 & 0xFF);
-		intbyte[2] = (byte) (newint >> 16 & 0xFF);
-		intbyte[1] = (byte) (newint >> 8 & 0xFF);
-		intbyte[0] = (byte) (newint & 0xFF);
-		replace(from, 4, intbyte, 0, 4);
-	}
-
-	public void replaceShort(int from, short newshort) {
-		byte[] intbyte = new byte[2];
-		intbyte[1] = (byte) (newshort >> 8 & 0xFF);
-		intbyte[0] = (byte) (newshort & 0xFF);
-		replace(from, 2, intbyte, 0, 2);
-	}
-
-	public void replaceByte(int from, byte newbyte) {
-		this.buffer[from] = newbyte;
-	}
-
-	public void replace(int from, int length, byte[] data, int dataOffset,
-			int dataLength) {
-		if (data == null)
-			return;
-		if (dataOffset + dataLength > data.length)
-			return;
-		int sizeoffset = dataLength - length;
-		if (sizeoffset > 0) {
-			byte[] tmp = new byte[this.size + sizeoffset + 100];
-			System.arraycopy(this.buffer, 0, tmp, 0, from);
-			System.arraycopy(this.buffer, from + length, tmp,
-					from + dataLength, this.size - from + length);
-			System.arraycopy(data, dataOffset, tmp, from, dataLength);
-			this.buffer = null;
-			this.buffer = tmp;
-		} else {
-			System.arraycopy(this.buffer, from + length, this.buffer, from
-					+ dataLength, this.size - from + length);
-			System.arraycopy(data, dataOffset, this.buffer, from, dataLength);
+	public void writeBytes(byte[] aValue, int aFrom, int aLength)
+	{
+		if (aValue == null) return;
+		if (aLength + aFrom > aValue.length) aLength = aValue.length - aFrom;
+		if (buffer.remaining() < aLength)
+		{
+			expand(buffer.array().length + aLength + 128);
 		}
-		this.size += sizeoffset;
+
+		buffer.put(aValue, aFrom, aLength);
+	}
+
+	public byte[] toBytes()
+	{
+		return this.buffer.array();
 	}
 }
