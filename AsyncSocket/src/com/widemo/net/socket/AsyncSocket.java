@@ -1,4 +1,4 @@
-package com.widemo.asyncsocket;
+package com.widemo.net.socket;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -15,7 +15,7 @@ import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.widemo.asyncsocket.data.SocketState;
+import com.widemo.net.socket.data.SocketState;
 
 /**************************************************************************
  * AsyncSocketClient</br>
@@ -39,7 +39,7 @@ public class AsyncSocket
 
 	private int							_socketID;
 	private String						_serverHost;
-	private int							_serverProt;
+	private int							_serverPort;
 	private boolean						_working		= false;
 	private SocketState					_state			= SocketState.NOTCONNECTED;
 	private int							_timeout		= 30 * 1000;
@@ -50,11 +50,10 @@ public class AsyncSocket
 	private SocketConnectRunnable		_socketConnectThread;
 
 	/**
-	 * 使用指定IP、端口号实例化AsyncSocket，日志开关默认关闭
 	 * Instantiate AsyncSocketClient with IP and port, log off.
 	 * 
 	 * @param ip
-	 * @param prot
+	 * @param port
 	 * @param listener
 	 */
 	public AsyncSocket(AsyncSocketListener listener)
@@ -63,11 +62,10 @@ public class AsyncSocket
 	}
 
 	/**
-	 * 使用指定IP、端口号及日志开关，实例化AsyncSocket
 	 * Instantiate AsyncSocket with IP, port and log switch.
 	 * 
 	 * @param ip
-	 * @param prot
+	 * @param port
 	 * @param listener
 	 * @param debug
 	 */
@@ -78,14 +76,13 @@ public class AsyncSocket
 		_socketListener = listener;
 		_socketHandler = new SocketConnectHandler();
 		_executor = Executors.newCachedThreadPool();
-		logInfo(String.format("Connect to %1$s:%2$d", _serverHost, _serverProt));
+		logInfo(String.format("Connect to %1$s:%2$d", _serverHost, _serverPort));
 	}
 
 	/**
-	 * 设置服务器IP或地址，如果Socket已经连接，则在断开后下次连接时生效
+	 * Set socket server host, if socket is already connected, set the next time you connect.
 	 * 
-	 * @param ip
-	 *            IP地址为空时触发NullPointerException
+	 * @param host
 	 */
 	public void setServerHost(String host)
 	{
@@ -97,18 +94,23 @@ public class AsyncSocket
 		_serverHost = host;
 	}
 
-	public void setServerProt(int prot)
+	/**
+	 * Set socket server port, if socket is already connected, set the next time you connect.
+	 * 
+	 * @param port
+	 */
+	public void setServerPort(int port)
 	{
-		if (prot < 0 || prot > 65536)
+		if (port < 0 || port > 65535)
 		{
-			throw new NullPointerException("Error prot");
+			throw new NullPointerException("Error port");
 		}
-		logInfo("Set server prot to \"" + prot + "\"");
-		_serverProt = prot;
+		logInfo("Set server port to \"" + port + "\"");
+		_serverPort = port;
 	}
 
 	/**
-	 * 设置AsyncSocket实例ID，仅用于区分对象，不作为连接参数
+	 * Set AsyncSocket instance ID, used only to distinguish objects, not as a connection parameter.
 	 * 
 	 * @param id
 	 */
@@ -119,9 +121,7 @@ public class AsyncSocket
 	}
 
 	/**
-	 * 设置Socket连接超时时间，如果Socket已经连接，则在断开后下次连接时生效
-	 * Set socket timeout, If socket is already connected, set the next time you
-	 * connect.
+	 * Set socket timeout, if socket is already connected, set the next time you connect.
 	 * 
 	 * @param timeout
 	 *            the timeout value in milliseconds or 0 for an infinite timeout.
@@ -154,7 +154,6 @@ public class AsyncSocket
 	}
 
 	/**
-	 * 发送数据到服务器
 	 * Send data to server
 	 * 
 	 * @param data
@@ -170,7 +169,7 @@ public class AsyncSocket
 		{
 			_socketWriter.write(data);
 			_socketWriter.flush();
-			logInfo("Send Data");
+			logInfo("Send data, length = " + data.length);
 		}
 		catch (IOException e)
 		{
@@ -196,9 +195,9 @@ public class AsyncSocket
 		{
 			return;
 		}
-		if (TextUtils.isEmpty(_serverHost) || _serverProt <= 0)
+		if (TextUtils.isEmpty(_serverHost) || _serverPort <= 0)
 		{
-			throw new NullPointerException("Error IP address or prot");
+			throw new NullPointerException("Error IP address or port");
 		}
 		_state = SocketState.CONNECTING;
 		_socketConnectThread = new SocketConnectRunnable(_socketHandler);
@@ -207,7 +206,7 @@ public class AsyncSocket
 
 	private void logInfo(String msg)
 	{
-		if (_debug)
+		if (_debug && !TextUtils.isEmpty(msg))
 		{
 			Log.i(TAG, msg);
 		}
@@ -215,7 +214,7 @@ public class AsyncSocket
 
 	private void logWarn(String msg)
 	{
-		if (_debug)
+		if (_debug && !TextUtils.isEmpty(msg))
 		{
 			Log.w(TAG, msg);
 		}
@@ -236,12 +235,14 @@ public class AsyncSocket
 		{
 
 			SocketWhat what = SocketWhat.values()[msg.what];
+			logInfo(String.format("Handler Message: ", msg.what));
 			switch (what)
 			{
 				case CONNECTED:
 					_state = SocketState.CONNECTED;
 					if (_socketListener != null)
 					{
+						logInfo(String.format("Send connected notify to listener."));
 						_socketListener.onSocketConnected(AsyncSocket.this);
 					}
 					break;
@@ -249,6 +250,7 @@ public class AsyncSocket
 					_state = SocketState.NOTCONNECTED;
 					if (_socketListener != null)
 					{
+						logInfo(String.format("Send connection failed notify to listener."));
 						_socketListener.onSocketConnectionFailed(AsyncSocket.this);
 					}
 					break;
@@ -256,6 +258,7 @@ public class AsyncSocket
 					_state = SocketState.NOTCONNECTED;
 					if (_socketListener != null)
 					{
+						logInfo(String.format("Send interruption notify to listener."));
 						_socketListener.onSocketInterruption(AsyncSocket.this);
 					}
 					break;
@@ -264,8 +267,10 @@ public class AsyncSocket
 					int bytes = msg.arg1;
 					if (_socketListener != null)
 					{
+						logInfo(String.format("Send receive notify to listener."));
 						_socketListener.onSocketReceive(AsyncSocket.this, bytesReceived, bytes);
 					}
+					break;
 			}
 		}
 	}
@@ -338,7 +343,7 @@ public class AsyncSocket
 					_socket = new Socket();
 				}
 
-				InetSocketAddress isa = new InetSocketAddress(_serverHost, _serverProt);
+				InetSocketAddress isa = new InetSocketAddress(_serverHost, _serverPort);
 				_socket.connect(isa, _timeout);
 
 				InputStream is = _socket.getInputStream();
@@ -355,18 +360,23 @@ public class AsyncSocket
 				return;
 			}
 			_working = true;
-			byte[] bytesReceived = new byte[RECEIVED_BYTES_SIZE];
+
 			int bytes = 0;
 			sendMessage(SocketWhat.CONNECTED);
+			byte[] bytesReceived = new byte[RECEIVED_BYTES_SIZE];
 			while (_working && !interrupted())
 			{
 				try
 				{
+
 					bytes = _socketReader.read(bytesReceived, 0, bytesReceived.length);
 					if (bytes > 0)
 					{
+
+						byte[] data = new byte[bytes];
+						System.arraycopy(bytesReceived, 0, data, 0, bytes);
 						logInfo(String.format("Receive Message, Data size = %1$d", bytes));
-						sendMessage(SocketWhat.RECEIVE, bytes, 0, bytesReceived);
+						sendMessage(SocketWhat.RECEIVE, bytes, 0, data);
 					}
 				}
 				catch (IOException e)

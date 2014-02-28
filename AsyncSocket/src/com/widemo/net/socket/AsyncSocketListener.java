@@ -1,4 +1,4 @@
-package com.widemo.asyncsocket;
+package com.widemo.net.socket;
 
 /**************************************************************************
  * AsyncSocketListener</br>

@@ -1,4 +1,4 @@
-package com.widemo.asyncsocket.data;
+package com.widemo.net.socket.data;
 
 /**************************************************************************
  * SocketState</br>
