@@ -133,7 +133,6 @@ public class AsyncSocket
 	}
 
 	/**
-	 * 获取当前Socket连接状态
 	 * Current socket state.
 	 * 
 	 * @return
@@ -144,7 +143,7 @@ public class AsyncSocket
 	}
 
 	/**
-	 * 获取AsyncSocket实例ID
+	 * Get AsyncSocket ID
 	 * 
 	 * @return
 	 */
@@ -154,7 +153,7 @@ public class AsyncSocket
 	}
 
 	/**
-	 * Send data to server
+	 * Send data to server.
 	 * 
 	 * @param data
 	 */
@@ -177,9 +176,12 @@ public class AsyncSocket
 		}
 	}
 
+	/**
+	 * Close connected socket, and notify interruption message to listener on socket closed.
+	 */
 	public synchronized void close()
 	{
-		if (_state != SocketState.CONNECTED)
+		if (_state == SocketState.NOTCONNECTED)
 		{
 			return;
 		}
@@ -189,6 +191,9 @@ public class AsyncSocket
 
 	}
 
+	/**
+	 * Connect socket server, and notify result to listener
+	 */
 	public synchronized void connect()
 	{
 		if (_state != SocketState.NOTCONNECTED)
@@ -372,7 +377,6 @@ public class AsyncSocket
 					bytes = _socketReader.read(bytesReceived, 0, bytesReceived.length);
 					if (bytes > 0)
 					{
-
 						byte[] data = new byte[bytes];
 						System.arraycopy(bytesReceived, 0, data, 0, bytes);
 						logInfo(String.format("Receive Message, Data size = %1$d", bytes));
