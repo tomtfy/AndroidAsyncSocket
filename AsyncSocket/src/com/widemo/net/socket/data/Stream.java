@@ -277,7 +277,7 @@ public class Stream
 
 	public int remaining()
 	{
-		return buffer.remaining();
+		return size() - position();
 	}
 
 	public int size()
