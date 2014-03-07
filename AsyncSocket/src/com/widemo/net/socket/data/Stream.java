@@ -105,6 +105,11 @@ public class Stream
 		return buffer.getLong();
 	}
 
+	public double readDouble()
+	{
+		return buffer.getDouble();
+	}
+
 	public byte readByte()
 	{
 		return buffer.get();
@@ -167,6 +172,16 @@ public class Stream
 			expand(length + 8 + DEFAULT_EXPAND_SIZE);
 		}
 		buffer.putLong(aValue);
+		length += 8;
+	}
+
+	public void writeDouble(double aValue)
+	{
+		if (remaining() < 8)
+		{
+			expand(length + 8 + DEFAULT_EXPAND_SIZE);
+		}
+		buffer.putDouble(aValue);
 		length += 8;
 	}
 
