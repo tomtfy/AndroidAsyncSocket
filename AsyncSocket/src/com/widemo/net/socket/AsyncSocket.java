@@ -386,8 +386,7 @@ public class AsyncSocket
 				catch (IOException e)
 				{
 					logError(e.getMessage());
-					clean();
-					return;
+					break;
 				}
 			}
 			clean();
