@@ -3,6 +3,8 @@ package com.widemo.net.socket.data;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
+import android.text.TextUtils;
+
 /**************************************************************************
  * Stream</br>
  * Author : isUseful ? TanJian : Unknown</br>
@@ -15,26 +17,14 @@ public class Stream
 
 	private ByteBuffer			buffer;
 	private int					length				= 0;
-	private boolean				debug				= false;
 
 	public Stream()
 	{
-		this(false);
-	}
-
-	public Stream(boolean debug)
-	{
-		this.debug = debug;
 		this.buffer = ByteBuffer.allocate(DEFAULT_EXPAND_SIZE);
 		rewind();
 	}
 
 	public Stream(byte[] in)
-	{
-		this(in, false);
-	}
-
-	public Stream(byte[] in, boolean debug)
 	{
 		this.buffer = ByteBuffer.allocate(length + DEFAULT_EXPAND_SIZE);
 		writeBytes(in);
@@ -135,77 +125,82 @@ public class Stream
 		return 0;
 	}
 
-	public void writeByte(byte aValue)
+	public void writeByte(byte value)
 	{
 		if (remaining() < 1)
 		{
 			expand(length + 1 + DEFAULT_EXPAND_SIZE);
 		}
-		buffer.put(aValue);
+		buffer.put(value);
 		length++;
 	}
 
-	public void writeInt(int aValue)
+	public void writeInt(int value)
 	{
 		if (remaining() < 4)
 		{
 			expand(length + 4 + DEFAULT_EXPAND_SIZE);
 		}
-		buffer.putInt(aValue);
+		buffer.putInt(value);
 		length += 4;
 	}
 
-	public void writeShort(short aValue)
+	public void writeShort(short value)
 	{
 		if (remaining() < 2)
 		{
 			expand(length + 2 + DEFAULT_EXPAND_SIZE);
 		}
-		buffer.putShort(aValue);
+		buffer.putShort(value);
 		length += 2;
 	}
 
-	public void writeLong(long aValue)
+	public void writeLong(long value)
 	{
 		if (remaining() < 8)
 		{
 			expand(length + 8 + DEFAULT_EXPAND_SIZE);
 		}
-		buffer.putLong(aValue);
+		buffer.putLong(value);
 		length += 8;
 	}
 
-	public void writeDouble(double aValue)
+	public void writeDouble(double value)
 	{
 		if (remaining() < 8)
 		{
 			expand(length + 8 + DEFAULT_EXPAND_SIZE);
 		}
-		buffer.putDouble(aValue);
+		buffer.putDouble(value);
 		length += 8;
 	}
 
-	public void writeChar(char aValue)
+	public void writeChar(char value)
 	{
 		if (remaining() < 2)
 		{
 			expand(length + 2 + DEFAULT_EXPAND_SIZE);
 		}
-		buffer.putChar(aValue);
+		buffer.putChar(value);
 		length += 2;
 	}
 
-	public void writeString(String aValue)
+	public void writeString(String value)
 	{
-		writeString(aValue, CHARSET_UTF8);
+		writeString(value, CHARSET_UTF8);
 	}
 
-	public void writeString(String aValue, String charset)
+	public void writeString(String value, String charset)
 	{
-		int len = aValue.length();
+		if (TextUtils.isEmpty(value))
+		{
+			writeInt(0);
+			return;
+		}
 		try
 		{
-			byte[] stringData = aValue.getBytes(charset);
+			byte[] stringData = value.getBytes(charset);
+			int len = stringData.length;
 			writeInt(len);
 			if (remaining() < stringData.length)
 			{
@@ -219,10 +214,10 @@ public class Stream
 		}
 	}
 
-	public void writeBytes(byte[] aValue)
+	public void writeBytes(byte[] value)
 	{
-		if (aValue == null) return;
-		writeBytes(aValue, 0, aValue.length);
+		if (value == null) return;
+		writeBytes(value, 0, value.length);
 	}
 
 	public void writeBytes(byte[] src, int srcOffset, int byteCount)
