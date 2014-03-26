@@ -157,12 +157,12 @@ public class AsyncSocket
 	 * 
 	 * @param data
 	 */
-	public void send(byte[] data)
+	public boolean send(byte[] data)
 	{
 		if (_state != SocketState.CONNECTED || data == null || data.length <= 0)
 		{
 			logWarn("CAN'T send message because socket not connected!");
-			return;
+			return false;
 		}
 		try
 		{
@@ -173,7 +173,9 @@ public class AsyncSocket
 		catch (IOException e)
 		{
 			logError(e.getMessage());
+			return false;
 		}
+		return true;
 	}
 
 	/**
