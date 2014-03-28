@@ -208,6 +208,7 @@ public class AsyncSocket
 		}
 		_state = SocketState.CONNECTING;
 		_socketConnectThread = new SocketConnectRunnable(_socketHandler);
+		_socketConnectThread.setName(TAG);
 		_executor.execute(_socketConnectThread);
 	}
 
