@@ -25,8 +25,11 @@ import com.widemo.net.socket.data.SocketState;
 public class AsyncSocket
 {
 
-	private static final String	TAG					= "AsyncSocketClient";
-	private static final int	RECEIVED_BYTES_SIZE	= 1024;				// Receive byte array length
+	public static final int		CALLBACK_THREAD_MAIN		= 0;
+	public static final int		CALLBACK_THREAD_BACKGROUND	= 1;
+
+	private static final String	TAG							= "AsyncSocketClient";
+	private static final int	RECEIVED_BYTES_SIZE			= 1024;				// Receive byte array length
 
 	private enum SocketWhat
 	{
@@ -43,6 +46,7 @@ public class AsyncSocket
 	private boolean						_working		= false;
 	private SocketState					_state			= SocketState.NOTCONNECTED;
 	private int							_timeout		= 30 * 1000;
+	private int							_callbackThread	= CALLBACK_THREAD_BACKGROUND;
 	private Socket						_socket			= null;
 	private DataInputStream				_socketReader	= null;
 	private DataOutputStream			_socketWriter	= null;
@@ -133,6 +137,31 @@ public class AsyncSocket
 	}
 
 	/**
+	 * Set socket callback thread, if set the callback thread to CALLBACK_THREAD_BACKGROUND, the socket will use its own thread notice, so if you do not accidentally cause the thread to crash, congratulations, Bug be with you.
+	 * 
+	 * @param threadType
+	 *            CALLBACK_THREAD_BACKGROUND or CALLBACK_THREAD_MAIN
+	 */
+	public void setCallbackThread(int threadType)
+	{
+		if (threadType != CALLBACK_THREAD_BACKGROUND && threadType != CALLBACK_THREAD_MAIN)
+		{
+			throw new IllegalArgumentException("Thread type error!");
+		}
+		_callbackThread = threadType;
+	}
+
+	/**
+	 * Current socket callback thread type.
+	 * 
+	 * @return CALLBACK_THREAD_BACKGROUND or CALLBACK_THREAD_MAIN
+	 */
+	public int getCallbackThread()
+	{
+		return _callbackThread;
+	}
+
+	/**
 	 * Current socket state.
 	 * 
 	 * @return
@@ -208,6 +237,7 @@ public class AsyncSocket
 		}
 		_state = SocketState.CONNECTING;
 		_socketConnectThread = new SocketConnectRunnable(_socketHandler);
+		_socketConnectThread.setPriority(Thread.NORM_PRIORITY);
 		_socketConnectThread.setName(TAG);
 		_executor.execute(_socketConnectThread);
 	}
@@ -383,7 +413,18 @@ public class AsyncSocket
 						byte[] data = new byte[bytes];
 						System.arraycopy(bytesReceived, 0, data, 0, bytes);
 						logInfo(String.format("Receive Message, Data size = %1$d", bytes));
-						sendMessage(SocketWhat.RECEIVE, bytes, 0, data);
+						if (_callbackThread == CALLBACK_THREAD_MAIN)
+						{
+							sendMessage(SocketWhat.RECEIVE, bytes, 0, data);
+						}
+						else
+						{
+							if (_socketListener != null)
+							{
+								logInfo(String.format("Send receive notify to listener."));
+								_socketListener.onSocketReceive(AsyncSocket.this, data, bytes);
+							}
+						}
 					}
 				}
 				catch (IOException e)
